@@ -9,6 +9,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+import com.nckueat.foodsmap.exception.EmailValidateTooManyRetry;
 import com.nckueat.foodsmap.exception.TooFrequentResends;
 import com.nckueat.foodsmap.exception.WrongValidateCode;
 import com.nckueat.foodsmap.properties.MailProperties;
@@ -23,8 +24,9 @@ class ValidateData {
     private final String identifyCode;
     private final long time;
     private final Timer timer;
+    @Builder.Default
+    private int countDown = 8;
 }
-
 
 @Component
 @EnableConfigurationProperties(MailProperties.class)
@@ -101,7 +103,6 @@ public class EmailValidation {
                 .time(System.currentTimeMillis()).timer(timer).build();
         this.createRecord(validateData);
 
-
         if (this.enable) {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(this.from);
@@ -119,16 +120,32 @@ public class EmailValidation {
         return identifyCode;
     }
 
-    public void preCheck(String email, String code, String identifyCode) {
+    public void preCheck(String email, String code, String identifyCode)
+            throws WrongValidateCode, EmailValidateTooManyRetry {
         ValidateData validateData = emailMap.get(email);
-        if (validateData == null || !validateData.getCode().equals(code)
+        if (validateData == null) {
+            throw new WrongValidateCode(email);
+        }
+
+        int countDown = validateData.getCountDown();
+        validateData.setCountDown(validateData.getCountDown() - 1);
+        if (countDown <= 0) {
+            this.removeRecord(email);
+            throw new EmailValidateTooManyRetry(email);
+        }
+
+        if (!validateData.getCode().equals(code)
                 || !validateData.getIdentifyCode().equals(identifyCode)) {
+
+            if (countDown == 1) {
+                this.removeRecord(email);
+            }
             throw new WrongValidateCode(email);
         }
     }
 
     public void validateEmail(String email, String code, String identifyCode)
-            throws WrongValidateCode {
+            throws WrongValidateCode, EmailValidateTooManyRetry {
         this.preCheck(email, code, identifyCode);
 
         this.removeRecord(email);

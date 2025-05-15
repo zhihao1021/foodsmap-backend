@@ -9,31 +9,26 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-import com.nckueat.foodsmap.annotation.CurrentUser;
+import com.nckueat.foodsmap.annotation.CurrentUserId;
 import com.nckueat.foodsmap.component.Jwt.JwtAuthenticationToken;
 import com.nckueat.foodsmap.component.Jwt.JwtUtil;
 import com.nckueat.foodsmap.exception.Unauthorized;
-import com.nckueat.foodsmap.model.entity.User;
-import com.nckueat.foodsmap.service.UserService;
 
-public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
-    private final UserService userService;
+public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
     private final JwtUtil jwtUtil;
 
-    public CurrentUserArgumentResolver(UserService userService, JwtUtil jwtUtil) {
-        this.userService = userService;
+    public CurrentUserIdArgumentResolver(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(CurrentUser.class)
-                && (User.class.isAssignableFrom(parameter.getParameterType())
-                        || User.class.isAssignableFrom(parameter.getParameterType()));
+        return parameter.hasParameterAnnotation(CurrentUserId.class)
+                && Long.class.isAssignableFrom(parameter.getParameterType());
     }
 
     @Override
-    public User resolveArgument(@NonNull MethodParameter parameter,
+    public Long resolveArgument(@NonNull MethodParameter parameter,
             @Nullable ModelAndViewContainer mavContainer, @NonNull NativeWebRequest webRequest,
             @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
@@ -48,8 +43,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             String token = jwtAuthenticationToken.getCredentials();
 
             if (jwtUtil.validateToken(token)) {
-                User user = userService.getUserById(userId);
-                return user;
+                return userId;
             }
         }
 

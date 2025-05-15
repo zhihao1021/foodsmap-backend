@@ -3,7 +3,9 @@ package com.nckueat.foodsmap.exceptionHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -14,9 +16,11 @@ public class GlobalExceptionHandler {
         HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         if (e instanceof ErrorResponse) {
             statusCode = ((ErrorResponse) e).getStatusCode();
-        }
-
-        if (!(e instanceof HTTPException)) {
+        } else if (e instanceof HttpMessageNotReadableException) {
+            statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
+        } else if (HttpMediaTypeException.class.isAssignableFrom(e.getClass())) {
+            statusCode = HttpStatus.UNSUPPORTED_MEDIA_TYPE;
+        } else {
             e.printStackTrace();
         }
 

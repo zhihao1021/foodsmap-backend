@@ -5,29 +5,35 @@ import java.util.List;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import com.mongodb.DuplicateKeyException;
+import com.nckueat.foodsmap.Utils.PasswordChecker;
 import com.nckueat.foodsmap.component.CloudflareTurnstile.CloudflareTurnstile;
 import com.nckueat.foodsmap.component.EmailValidation.EmailValidation;
 import com.nckueat.foodsmap.component.Jwt.JwtUtil;
 import com.nckueat.foodsmap.component.SnowflakeId.SnowflakeIdGenerator;
 import com.nckueat.foodsmap.exception.CFValidateFailed;
+import com.nckueat.foodsmap.exception.DisplayNameTooLong;
+import com.nckueat.foodsmap.exception.DisplayNameTooShort;
 import com.nckueat.foodsmap.exception.EmailNotRegisted;
+import com.nckueat.foodsmap.exception.EmailValidateTooManyRetry;
 import com.nckueat.foodsmap.exception.PasswordNotMatch;
+import com.nckueat.foodsmap.exception.PasswordTooWeak;
 import com.nckueat.foodsmap.exception.TooFrequentResends;
 import com.nckueat.foodsmap.exception.UserAlreadyExist;
 import com.nckueat.foodsmap.exception.UserNotFound;
 import com.nckueat.foodsmap.exception.UsernameIllegal;
+import com.nckueat.foodsmap.exception.WrongEmailFormat;
 import com.nckueat.foodsmap.exception.WrongValidateCode;
 import com.nckueat.foodsmap.model.dto.Jwt;
 import com.nckueat.foodsmap.model.dto.request.UserCreate;
-import com.nckueat.foodsmap.model.enitiy.User;
+import com.nckueat.foodsmap.model.entity.User;
 import com.nckueat.foodsmap.repository.UserRepository;
 import com.nckueat.foodsmap.types.LoginMethod;
 
 @Service
 public class AuthorizationService {
-
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -39,7 +45,7 @@ public class AuthorizationService {
     @Autowired
     private EmailValidation emailValidation;
 
-    public List<LoginMethod> getLoginMethods(String emailOrUsername)
+    public List<LoginMethod> getLoginMethods(@NonNull String emailOrUsername)
             throws EmailNotRegisted, UserNotFound {
         EmailValidator emailValidator = EmailValidator.getInstance();
 
@@ -61,7 +67,7 @@ public class AuthorizationService {
         return results;
     }
 
-    public void checkUsername(String username) throws UsernameIllegal, UserAlreadyExist {
+    public void checkUsername(@NonNull String username) throws UsernameIllegal, UserAlreadyExist {
         if (!username.matches("^[a-zA-Z0-9_]{5,30}$")) {
             throw new UsernameIllegal();
         }
@@ -71,9 +77,30 @@ public class AuthorizationService {
         }
     }
 
-    public String sendValidateEmail(String email, String cfResponse)
-            throws UserAlreadyExist, CFValidateFailed, TooFrequentResends {
+    public void checkEmail(@NonNull String email) throws WrongEmailFormat, UserAlreadyExist {
+        EmailValidator emailValidator = EmailValidator.getInstance();
+        if (!emailValidator.isValid(email)) {
+            throw new WrongEmailFormat();
+        }
+
         if (userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExist(email);
+        }
+    }
+
+    public String sendValidateEmail(@NonNull String email, @NonNull String cfResponse)
+            throws WrongEmailFormat, UserAlreadyExist, CFValidateFailed, TooFrequentResends {
+        return sendValidateEmail(email, cfResponse, true);
+    }
+
+    public String sendValidateEmail(@NonNull String email, @NonNull String cfResponse, boolean checkExist)
+            throws WrongEmailFormat, UserAlreadyExist, CFValidateFailed, TooFrequentResends {
+        EmailValidator emailValidator = EmailValidator.getInstance();
+        if (!emailValidator.isValid(email)) {
+            throw new WrongEmailFormat();
+        }
+
+        if (checkExist && userRepository.existsByEmail(email)) {
             throw new UserAlreadyExist(email);
         }
 
@@ -82,16 +109,30 @@ public class AuthorizationService {
         return emailValidation.sendValidateEmail(email);
     }
 
-    public void checkEmail(String email, String code, String identifyCode)
-            throws WrongValidateCode {
+    public void preCheckEmail(@NonNull String email, @NonNull String code,
+            @NonNull String identifyCode) throws WrongValidateCode, EmailValidateTooManyRetry {
         emailValidation.preCheck(email, code, identifyCode);
     }
 
-    public Jwt register(UserCreate userCreate)
-            throws UserAlreadyExist, UsernameIllegal, WrongValidateCode {
+    public Jwt register(@NonNull UserCreate userCreate) throws UserAlreadyExist, UsernameIllegal,
+            WrongValidateCode, WrongEmailFormat, EmailValidateTooManyRetry, DisplayNameTooLong, DisplayNameTooShort {
+        if (userCreate.getDisplayName().length() < 1) {
+            throw new DisplayNameTooShort();
+        }
+        if (userCreate.getDisplayName().length() > 64) {
+            throw new DisplayNameTooLong();
+        }
+        EmailValidator emailValidator = EmailValidator.getInstance();
+        if (!emailValidator.isValid(userCreate.getEmail())) {
+            throw new WrongEmailFormat();
+        }
         if (!userCreate.getUsername().matches("^[a-zA-Z0-9_]{5,30}$")) {
             throw new UsernameIllegal();
         }
+        if (!PasswordChecker.check(userCreate.getPassword())) {
+            throw new PasswordTooWeak();
+        }
+
         if (userRepository.existsByUsername(userCreate.getUsername())) {
             throw new UserAlreadyExist(userCreate.getUsername());
         }
@@ -105,15 +146,15 @@ public class AuthorizationService {
         try {
             User user = userRepository
                     .save(User.fromUserCreate(snowflakeIdGenerator.nextId(), userCreate));
-            String token = jwtUtil.generateToken(user, userCreate.isNoExpiration());
+            String token = jwtUtil.generateToken(user.getId(), userCreate.isNoExpiration());
             return Jwt.builder().access_token(token).build();
         } catch (DuplicateKeyException e) {
             throw new UserAlreadyExist(userCreate.getUsername());
         }
     }
 
-    public Jwt loginByPassword(String emailOrUsername, String password, boolean noExpiration)
-            throws UserNotFound, PasswordNotMatch {
+    public Jwt loginByPassword(@NonNull String emailOrUsername, @NonNull String password,
+            boolean noExpiration) throws UserNotFound, PasswordNotMatch {
         EmailValidator emailValidator = EmailValidator.getInstance();
 
         User user;
@@ -129,7 +170,12 @@ public class AuthorizationService {
             throw new PasswordNotMatch(emailOrUsername);
         }
 
-        String token = jwtUtil.generateToken(user, noExpiration);
+        String token = jwtUtil.generateToken(user.getId(), noExpiration);
+        return Jwt.builder().access_token(token).build();
+    }
+
+    public Jwt refreshToken(@NonNull User user) {
+        String token = jwtUtil.generateToken(user.getId(), false);
         return Jwt.builder().access_token(token).build();
     }
 }

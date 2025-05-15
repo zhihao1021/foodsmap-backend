@@ -46,4 +46,4 @@ cf-turnstile:
   secret: ${TURNSTILE_SECRET:1x0000000000000000000000000000000AA}
 mail:
   from: ${MAIL_FROM:foodsmap@example.com}
-  enabled: ${SEND_MAIN:false}
+  enabled: ${SEND_MAIL:false}

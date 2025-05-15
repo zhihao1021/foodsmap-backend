@@ -7,7 +7,6 @@ import java.util.Date;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.nckueat.foodsmap.model.enitiy.User;
 import com.nckueat.foodsmap.properties.JWTProperties;
 
 import io.jsonwebtoken.Jwts;
@@ -25,11 +24,11 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(User user) {
-        return this.generateToken(user, false);
+    public String generateToken(Long userId) {
+        return this.generateToken(userId, false);
     }
 
-    public String generateToken(User user, boolean noExpiration) {
+    public String generateToken(Long userId, boolean noExpiration) {
         Calendar expiredCalendar = Calendar.getInstance();
         if (noExpiration) {
             expiredCalendar.add(Calendar.YEAR, 1); // 1 year
@@ -37,7 +36,7 @@ public class JwtUtil {
             expiredCalendar.add(Calendar.DATE, 7); // 7 days
         }
 
-        return Jwts.builder().setSubject(user.getId().toString()).setIssuedAt(new Date())
+        return Jwts.builder().setSubject(userId.toString()).setIssuedAt(new Date())
                 .setExpiration(expiredCalendar.getTime()).signWith(key).compact();
     }
 

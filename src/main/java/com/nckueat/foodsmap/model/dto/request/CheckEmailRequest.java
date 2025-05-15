@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 
 @Data
-public class CheckUsernameRequest {
+public class CheckEmailRequest {
     @NonNull
-    private final String username;
+    private final String email;
 }
