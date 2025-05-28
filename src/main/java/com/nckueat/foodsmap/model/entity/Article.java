@@ -2,9 +2,12 @@ package com.nckueat.foodsmap.model.entity;
 
 import lombok.NonNull;
 import org.springframework.data.annotation.Id;
+import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class Article {
     @Id
     private Long id;
@@ -17,23 +20,21 @@ public class Article {
 
     @NonNull
     private Long like;
-    
+
     @NonNull
     private String[] tags;
-    
+
     @NonNull
     private Long authorID;
 
     @NonNull
-    private String[] mediaURL;
+    @Builder.Default
+    private String[] mediaURL = new String[0];
 
-    public Article(Long id, String title, String context, Long like, String[] tags, Long authorID) {
-        this.id = id;
-        this.title = title;
-        this.context = context;
-        this.like = like;
-        this.tags = tags;
-        this.authorID = authorID;
+    public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate) {
+        return Article.builder().id(id).title(articleCreate.getTitle())
+                .context(articleCreate.getContext()).like(0L).tags(articleCreate.getTags())
+                .authorID(authorId).mediaURL(articleCreate.getMediaURL()).build();
     }
 }
 

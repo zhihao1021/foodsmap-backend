@@ -2,25 +2,19 @@ package com.nckueat.foodsmap.model.dto.request;
 
 import lombok.NonNull;
 
-import java.util.Optional;
-
 import lombok.Data;
 
 @Data
 public class ArticleCreate {
     @NonNull
-    private String title;
+    private final String title;
 
     @NonNull
-    private String context;
+    private final String context;
 
     @NonNull
-    private Long like;
-    
-    @NonNull
-    private String[] tags;
+    private final String[] tags;
 
     @NonNull
-    private Optional<String[]> mediaURL;
-    
+    private final String[] mediaURL;
 }
