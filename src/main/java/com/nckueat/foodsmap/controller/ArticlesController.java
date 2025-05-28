@@ -85,5 +85,19 @@ public class ArticlesController {
 
         return ResponseEntity.ok(results);
     }
+
+    @PostMapping("recommend")
+    public ResponseEntity<List<Article>> ArticlesRecommend() throws ArticleNotFound{
+
+        Query query = new Query();
+        query.with(Sort.by(Sort.Direction.DESC, "like")).limit(10);
+        List<Article> results = mongoTemplate.find(query, Article.class);
+
+        if (results.isEmpty()) {
+            throw new ArticleNotFound();
+        }
+
+        return ResponseEntity.ok(results);
+    }
     
 }
