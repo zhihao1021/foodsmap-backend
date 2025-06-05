@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 public class ArticleSearch {
     @NonNull
-    private final String[] searchContext;
+    private final String searchContext;
 }
