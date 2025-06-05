@@ -41,8 +41,6 @@ public class UserController {
 
     @GetMapping("")
     public ResponseEntity<UserRead> getCurrentUser(@CurrentUser User user) {
-        System.out.println(user.getUsername());
-
         return ResponseEntity.ok(user.toUserRead());
     };
 
