@@ -3,16 +3,20 @@ package com.nckueat.foodsmap.controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +29,7 @@ import com.nckueat.foodsmap.exception.AvatarNotFound;
 import com.nckueat.foodsmap.exception.UpdateAvatarFailed;
 import com.nckueat.foodsmap.model.dto.request.UserUpdate;
 import com.nckueat.foodsmap.model.dto.vo.UserRead;
+import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
 import com.nckueat.foodsmap.model.entity.Avatar;
 import com.nckueat.foodsmap.model.entity.User;
 import com.nckueat.foodsmap.service.DefaultAvatar;
@@ -96,4 +101,10 @@ public class UserController {
 
     // return ResponseEntity.ok(avatar);
     // }
+
+    @PostMapping("{userID}/articles")
+    public ResponseEntity<List<ArticleRead>> getUserArticleById(@PathVariable Long userID) {
+        List<ArticleRead> results = userService.findArticleById(userID);
+        return ResponseEntity.ok(results);
+    }
 }

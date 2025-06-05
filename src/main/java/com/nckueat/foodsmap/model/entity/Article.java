@@ -3,6 +3,7 @@ package com.nckueat.foodsmap.model.entity;
 import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
+import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
 import lombok.Builder;
 import lombok.Data;
 
@@ -31,10 +32,17 @@ public class Article {
     @Builder.Default
     private String[] mediaURL = new String[0];
 
-    public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate) {
+    public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate, 
+                                            String[] tags) {
         return Article.builder().id(id).title(articleCreate.getTitle())
-                .context(articleCreate.getContext()).like(0L).tags(articleCreate.getTags())
+                .context(articleCreate.getContext()).like(0L).tags(tags)
                 .authorID(authorId).mediaURL(articleCreate.getMediaURL()).build();
+    }
+
+    public static ArticleRead toArticleRead(Article article) {
+        return ArticleRead.builder().id(article.getId()).title(article.getTitle())
+                .context(article.getContext()).like(0L).tags(article.getTags())
+                .authorID(article.getAuthorID()).mediaURL(article.getMediaURL()).build();
     }
 }
 

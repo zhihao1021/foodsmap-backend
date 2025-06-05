@@ -1,10 +1,14 @@
 package com.nckueat.foodsmap.service;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import com.nckueat.foodsmap.Utils.PasswordChecker;
@@ -21,6 +25,8 @@ import com.nckueat.foodsmap.exception.WrongValidateCode;
 import com.nckueat.foodsmap.model.dto.request.UserUpdate;
 import com.nckueat.foodsmap.model.entity.Avatar;
 import com.nckueat.foodsmap.model.entity.User;
+import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
+import com.nckueat.foodsmap.model.entity.Article;
 import com.nckueat.foodsmap.repository.AvatarRepository;
 import com.nckueat.foodsmap.repository.UserRepository;
 
@@ -89,4 +95,23 @@ public class UserService {
 
         mongoTemplate.upsert(query, update, Avatar.class);
     }
+
+    public List<ArticleRead> findArticleById(@NonNull Long userID) {
+        Query query = new Query();
+            query.addCriteria(Criteria.where("authorID").is(userID))
+            .with(Sort.by(Sort.Direction.DESC, "like"));
+        List<Article> articleResults = mongoTemplate.find(query, Article.class);
+        if (articleResults.isEmpty()) {
+            System.out.println("No articles found for user ID: " + userID);
+            return List.of();
+        }
+        List<ArticleRead> results = new ArrayList<>();
+        for (Article article : articleResults) {
+            System.out.println("Found article: " + article.getTitle() + " by user ID: " + userID);
+            results.add(Article.toArticleRead(article));
+        }
+
+        return results;
+    }
+
 }

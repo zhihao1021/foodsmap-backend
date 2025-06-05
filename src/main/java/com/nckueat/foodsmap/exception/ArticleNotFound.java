@@ -6,4 +6,8 @@ public class ArticleNotFound extends HTTPException {
     public ArticleNotFound() {
         super(HttpStatus.NOT_FOUND, "Article not found");
     }
+
+    public ArticleNotFound(String message) {
+        super(HttpStatus.NOT_FOUND, message);
+    }
 }
