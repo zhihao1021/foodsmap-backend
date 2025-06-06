@@ -37,7 +37,7 @@ public class Article {
 
     @NonNull
     @Builder.Default
-    private String[] googleMapURL = new String[0];
+    private String googleMapURL = "";
 
     public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate, 
                                             String[] tags) {
@@ -48,7 +48,7 @@ public class Article {
 
     public static ArticleRead toArticleRead(Article article) {
         return ArticleRead.builder().id(article.getId()).title(article.getTitle())
-                .context(article.getContext()).like(0L).date(System.currentTimeMillis()).tags(article.getTags())
+                .context(article.getContext()).like(article.getLike()).date(System.currentTimeMillis()).tags(article.getTags())
                 .authorID(article.getAuthorID()).mediaURL(article.getMediaURL()).googleMapURL(article.getGoogleMapURL()).build();
     }
 }
