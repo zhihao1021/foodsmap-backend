@@ -38,7 +38,7 @@ import com.nckueat.foodsmap.model.dto.vo.UserRead;
 import com.nckueat.foodsmap.model.dto.request.ArticleSearch;
 
 @RestController
-@RequestMapping("/articles")
+@RequestMapping("/article")
 public class ArticlesController {
 
     @Autowired
