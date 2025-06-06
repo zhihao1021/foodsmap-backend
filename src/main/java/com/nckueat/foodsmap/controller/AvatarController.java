@@ -53,7 +53,7 @@ public class AvatarController {
         }
     }
 
-    @PutMapping(params = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE + ";max-size=5MB")
+    @PutMapping(path = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE + ";max-size=5MB")
     public ResponseEntity<Void> updateCurrentUserAvatar(@CurrentUser User user,
             @NonNull @RequestParam(name = "file") MultipartFile file) {
         try (InputStream input = file.getInputStream()) {
