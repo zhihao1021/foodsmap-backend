@@ -18,6 +18,9 @@ public class ArticleRead {
     
     @NonNull
     private final Long like;
+
+    @NonNull
+    private final Long date;
     
     @NonNull
     private final String[] tags;
@@ -27,4 +30,7 @@ public class ArticleRead {
 
     @NonNull
     private final String[] mediaURL;
+
+    @NonNull
+    private final String[] googleMapURL;
 }

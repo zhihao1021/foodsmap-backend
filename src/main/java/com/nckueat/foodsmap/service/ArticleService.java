@@ -2,12 +2,16 @@ package com.nckueat.foodsmap.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+
+import org.bson.Document;
 
 import com.nckueat.foodsmap.component.SnowflakeId.SnowflakeIdGenerator;
 import com.nckueat.foodsmap.exception.ArticleNotFound;
@@ -45,18 +49,26 @@ public class ArticleService {
     public ArticleRead ArticlesUpdate(@NonNull ArticleUpdate data, @PathVariable Long articleId) {
         Article article =
                 articlesRepository.findById(articleId).orElseThrow(() -> new ArticleNotFound());
+
         data.getTitle().ifPresent(article::setTitle);
         data.getContext().ifPresent(article::setContext);
         data.getLike().ifPresent(article::setLike);
+        data.getMediaURL().ifPresent(article::setMediaURL);
+
         String[] tags = spiltTags(data.getContext().orElse(""));
         if (tags.length > 0) {
             article.setTags(tags);
         } else {
             article.setTags(new String[0]);
         }
-        articlesRepository.save(article);
 
+        if(data.getTitle().isPresent() || data.getContext().isPresent() || tags.length > 0 || data.getMediaURL().isPresent()){
+            article.setDate(System.currentTimeMillis());
+        }
+
+        articlesRepository.save(article);
         ArticleRead articleRead = Article.toArticleRead(article);
+
         return articleRead;
     }
 
@@ -79,6 +91,27 @@ public class ArticleService {
         }
 
         return results;
+    }
+
+    public List<String> findTop20Tags(){
+        List<String> tags = new ArrayList<>();
+
+        Aggregation agg = Aggregation.newAggregation(
+            Aggregation.unwind("tags"),
+            Aggregation.group("tags").count().as("count"),
+            Aggregation.sort(Sort.Direction.DESC, "count"),
+            Aggregation.limit(20)
+        );
+
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "article", Document.class);
+
+        for (Document doc : results.getMappedResults()) {
+            String tag = doc.getString("_id");
+            tags.add(tag);
+            System.out.println("Tag: " + tag + ", Count: " + doc.getInteger("count"));
+        }
+
+        return tags;
     }
 
     public String[] spiltTags(String inputTags) {
