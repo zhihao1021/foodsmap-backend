@@ -84,13 +84,13 @@ public class UserService {
     }
 
     public Avatar getAvatar(@NonNull Long userId) throws AvatarNotFound {
-        return avatarRepository.findByUserId(userId).orElseThrow(AvatarNotFound::new);
+        return avatarRepository.findById(userId).orElseThrow(AvatarNotFound::new);
     }
 
     public void updateAvatar(@NonNull User user, String contentType, @NonNull byte[] data)
             throws UpdateAvatarFailed {
 
-        Query query = new Query(Criteria.where("userId").is(user.getId()));
+        Query query = new Query(Criteria.where("_id").is(user.getId()));
         Update update = new Update().set("contentType", contentType).set("data", data);
 
         mongoTemplate.upsert(query, update, Avatar.class);
