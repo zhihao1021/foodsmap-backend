@@ -156,4 +156,10 @@ public class ArticlesController {
         return ResponseEntity.ok(results);
     }
 
+    @GetMapping("recommend/tag")
+    public ResponseEntity<List<String>> TagRecommend() throws ArticleNotFound {
+        List<String> tags = articlesService.findTop20Tags();
+        return ResponseEntity.ok(tags);
+    }
+
 }
