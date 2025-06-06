@@ -56,7 +56,7 @@ public class UserController {
     // return ResponseEntity.ok(avatar);
     // }
 
-    @PostMapping("{userID}/articles")
+    @GetMapping("{userID}/articles")
     public ResponseEntity<List<ArticleRead>> getUserArticleById(@PathVariable Long userID) {
         List<ArticleRead> results = userService.findArticleById(userID);
         return ResponseEntity.ok(results);

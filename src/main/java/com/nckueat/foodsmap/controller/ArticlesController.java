@@ -79,13 +79,11 @@ public class ArticlesController {
     @PostMapping("search/text")
     public ResponseEntity<List<ArticleRead>> ArticlesSearch(@RequestBody ArticleSearch data)
             throws ArticleNotFound {
-        
-        String[] searchContext = articlesService.spiltSearchText(data.getSearchContext());
-        TextCriteria criteria =
-                TextCriteria.forDefaultLanguage().matchingAny(searchContext); // 匹配任一詞
 
-        Query query = TextQuery.queryText(criteria)
-                .sortByScore()
+        String[] searchContext = articlesService.spiltSearchText(data.getSearchContext());
+        TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(searchContext); // 匹配任一詞
+
+        Query query = TextQuery.queryText(criteria).sortByScore()
                 .addCriteria(Criteria.where("score").gt(0))
                 .with(Sort.by(Sort.Direction.DESC, "like"));
         List<Article> searchResults = mongoTemplate.find(query, Article.class);
