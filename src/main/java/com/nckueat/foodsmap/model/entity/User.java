@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.nckueat.foodsmap.model.dto.request.UserCreate;
+import com.nckueat.foodsmap.model.dto.vo.GlobalUserView;
 import com.nckueat.foodsmap.model.dto.vo.UserRead;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,10 @@ public class User {
 
     public UserRead toUserRead() {
         return new UserRead(this.id.toString(), this.username, this.email, this.displayName);
+    }
+
+    public GlobalUserView toGlobalUserView() {
+        return new GlobalUserView(this.id.toString(), this.username, this.displayName);
     }
 
     public void setPassword(String password) {

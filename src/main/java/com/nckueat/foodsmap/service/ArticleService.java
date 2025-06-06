@@ -51,7 +51,7 @@ public class ArticleService {
         String[] tags = spiltTags(data.getContext().orElse(""));
         if (tags.length > 0) {
             article.setTags(tags);
-        }else{
+        } else {
             article.setTags(new String[0]);
         }
         articlesRepository.save(article);
@@ -60,18 +60,16 @@ public class ArticleService {
         return articleRead;
     }
 
-    public List<ArticleRead> ArticleSearchTag(String[] tag){
+    public List<ArticleRead> ArticleSearchTag(String[] tag) {
         Query query = new Query();
         List<Criteria> regexCriterias = new ArrayList<>();
-        
+
         for (String t : tag) {
-            regexCriterias.add(
-                Criteria.where("tags").regex(".*" + Pattern.quote(t) + ".*", "i")
-            );
+            regexCriterias.add(Criteria.where("tags").regex(".*" + Pattern.quote(t) + ".*", "i"));
         }
 
         query.addCriteria(new Criteria().orOperator(regexCriterias.toArray(new Criteria[0])))
-            .with(Sort.by(Sort.Direction.DESC, "like"));
+                .with(Sort.by(Sort.Direction.DESC, "like"));
 
         List<Article> articles = mongoTemplate.find(query, Article.class);
         List<ArticleRead> results = new ArrayList<>();
@@ -84,20 +82,20 @@ public class ArticleService {
     }
 
     public String[] spiltTags(String inputTags) {
-	    inputTags = inputTags.replaceAll("#\\s+", "#");
-	    List<String> tags = new ArrayList<>();
+        inputTags = inputTags.replaceAll("#\\s+", "#");
+        List<String> tags = new ArrayList<>();
 
-	    Pattern pattern = Pattern.compile("#(\\w+(?:\\+\\w+)*)");
-	    Matcher matcher = pattern.matcher(inputTags);
+        Pattern pattern = Pattern.compile("#(\\w+(?:\\+\\w+)*)");
+        Matcher matcher = pattern.matcher(inputTags);
 
-	    while (matcher.find()) {
-	        tags.add(matcher.group(1));
-	    }
+        while (matcher.find()) {
+            tags.add(matcher.group(1));
+        }
         return tags.toArray(new String[0]);
-	}
+    }
 
     public String[] spiltSearchText(String seaechText) {
-	    String seaech = seaechText.replaceAll("[\\s,|+_\\-]+", " ");
-	    return seaech.split(" ");
+        String seaech = seaechText.replaceAll("[\\s,|+_\\-]+", " ");
+        return seaech.split(" ");
     }
 }

@@ -37,6 +37,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             Authentication authenticationToken = new JwtAuthenticationToken(userId, token, null);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
+        // else {
+        //     final String cookies = request.getHeader("Cookie");
+        //     if (cookies != null && cookies.contains("access_token=")) {
+        //         // final String jwtCookie = 
+        //         final String jwtCookie = cookies.split("access_token=")[1].split(";")[0];
+        //         if (!jwtCookie.isEmpty() && jwtUtil.validateToken(jwtCookie)) {
+        //             final Long userId = jwtUtil.extractUserId(jwtCookie);
+
+        //             Authentication authenticationToken = new JwtAuthenticationToken(userId, jwtCookie, null);
+        //             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        //         }
+        //     }
+        // }
 
         filterChain.doFilter(request, response);
     }

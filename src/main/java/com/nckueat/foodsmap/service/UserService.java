@@ -41,7 +41,7 @@ public class UserService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public User getUserById(@NonNull Long id) {
+    public User getUserById(@NonNull Long id) throws UserNotFound {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFound(id.toString()));
         return user;
     }
@@ -87,8 +87,8 @@ public class UserService {
         return avatarRepository.findByUserId(userId).orElseThrow(AvatarNotFound::new);
     }
 
-    public void updateAvatar(@NonNull User user, String contentType,
-            @NonNull byte[] data) throws UpdateAvatarFailed {
+    public void updateAvatar(@NonNull User user, String contentType, @NonNull byte[] data)
+            throws UpdateAvatarFailed {
 
         Query query = new Query(Criteria.where("userId").is(user.getId()));
         Update update = new Update().set("contentType", contentType).set("data", data);
@@ -96,10 +96,14 @@ public class UserService {
         mongoTemplate.upsert(query, update, Avatar.class);
     }
 
+    public void deleteAvatar(@NonNull User user) {
+        avatarRepository.deleteByUserId(user.getId());
+    }
+
     public List<ArticleRead> findArticleById(@NonNull Long userID) {
         Query query = new Query();
-            query.addCriteria(Criteria.where("authorID").is(userID))
-            .with(Sort.by(Sort.Direction.DESC, "like"));
+        query.addCriteria(Criteria.where("authorID").is(userID))
+                .with(Sort.by(Sort.Direction.DESC, "like"));
         List<Article> articleResults = mongoTemplate.find(query, Article.class);
         if (articleResults.isEmpty()) {
             System.out.println("No articles found for user ID: " + userID);
