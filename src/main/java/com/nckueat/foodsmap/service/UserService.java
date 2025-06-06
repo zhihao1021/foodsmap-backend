@@ -97,7 +97,7 @@ public class UserService {
     }
 
     public void deleteAvatar(@NonNull User user) {
-        avatarRepository.deleteByUserId(user.getId());
+        avatarRepository.deleteById(user.getId());
     }
 
     public List<ArticleRead> findArticleById(@NonNull Long userID) {

@@ -10,5 +10,5 @@ public interface AvatarRepository extends MongoRepository<Avatar, Long> {
     boolean existsById(@NonNull Long userId);
     @NonNull
     Optional<Avatar> findById(@NonNull Long userId);
-    void deleteByUserId(Long userId);
+    void deleteById(@NonNull Long userId);
 }
