@@ -23,6 +23,9 @@ public class Article {
     private Long like;
 
     @NonNull
+    private Long date;
+
+    @NonNull
     private String[] tags;
 
     @NonNull
@@ -32,17 +35,21 @@ public class Article {
     @Builder.Default
     private String[] mediaURL = new String[0];
 
+    @NonNull
+    @Builder.Default
+    private String[] googleMapURL = new String[0];
+
     public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate, 
                                             String[] tags) {
         return Article.builder().id(id).title(articleCreate.getTitle())
-                .context(articleCreate.getContext()).like(0L).tags(tags)
+                .context(articleCreate.getContext()).like(0L).date(System.currentTimeMillis()).tags(tags)
                 .authorID(authorId).mediaURL(articleCreate.getMediaURL()).build();
     }
 
     public static ArticleRead toArticleRead(Article article) {
         return ArticleRead.builder().id(article.getId()).title(article.getTitle())
-                .context(article.getContext()).like(0L).tags(article.getTags())
-                .authorID(article.getAuthorID()).mediaURL(article.getMediaURL()).build();
+                .context(article.getContext()).like(0L).date(System.currentTimeMillis()).tags(article.getTags())
+                .authorID(article.getAuthorID()).mediaURL(article.getMediaURL()).googleMapURL(article.getGoogleMapURL()).build();
     }
 }
 
