@@ -32,5 +32,5 @@ public class ArticleRead {
     private final String[] mediaURL;
 
     @NonNull
-    private final String[] googleMapURL;
+    private final String googleMapURL;
 }
