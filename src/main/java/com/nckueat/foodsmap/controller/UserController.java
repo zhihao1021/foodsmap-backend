@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +18,6 @@ import com.nckueat.foodsmap.model.dto.vo.UserRead;
 import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
 import com.nckueat.foodsmap.model.dto.vo.GlobalUserView;
 import com.nckueat.foodsmap.model.entity.User;
-import com.nckueat.foodsmap.service.DefaultAvatar;
 import com.nckueat.foodsmap.service.UserService;
 
 @RestController
@@ -28,8 +26,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private DefaultAvatar defaultAvatar;
 
     @GetMapping("")
     public ResponseEntity<UserRead> getCurrentUser(@CurrentUser User user) {

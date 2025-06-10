@@ -6,7 +6,7 @@ spring:
       uri: ${DB_URI:mongodb://foodsmap:foodsmap@127.0.0.1:27017/foodsmap?authSource=admin}
       ssl:
         enabled: ${DB_SSL:false}
-        bundle: foodsmap
+        bundle: foodsmap-mongodb
   security:
     oauth2:
       client:
@@ -20,7 +20,7 @@ spring:
   ssl:
     bundle:
       pem:
-        foodsmap:
+        foodsmap-mongodb:
           truststore:
             certificate: ${DB_CA_FILE:null}
   mail:
@@ -46,4 +46,14 @@ cf-turnstile:
   secret: ${TURNSTILE_SECRET:1x0000000000000000000000000000000AA}
 mail:
   from: ${MAIL_FROM:foodsmap@example.com}
-  enabled: ${SEND_MAIL:false}
+  enabled: ${SEND_MAIL:true}
+elasticsearch:
+  uris:
+    - ${ES_HOST:localhost:9200}
+  auth:
+    # username: ${ES_USERNAME:elastic}
+    # password: ${ES_USERNAME:pass}
+    api-key: ${ES_API_KEY:null}
+  ssl:
+    enabled: ${ES_USE_SSL:false}
+    certificate: ${ES_CA_FILE:null}
