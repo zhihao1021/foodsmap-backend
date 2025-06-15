@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import com.mongodb.DuplicateKeyException;
 import com.nckueat.foodsmap.Utils.PasswordChecker;
-import com.nckueat.foodsmap.component.CloudflareTurnstile.CloudflareTurnstile;
-import com.nckueat.foodsmap.component.EmailValidation.EmailValidation;
-import com.nckueat.foodsmap.component.Jwt.JwtUtil;
-import com.nckueat.foodsmap.component.SnowflakeId.SnowflakeIdGenerator;
+import com.nckueat.foodsmap.component.cloudflareTurnstile.CloudflareTurnstile;
+import com.nckueat.foodsmap.component.emailValidation.EmailValidation;
+import com.nckueat.foodsmap.component.jwt.JwtUtil;
+import com.nckueat.foodsmap.component.snowflakeId.SnowflakeIdGenerator;
 import com.nckueat.foodsmap.exception.CFValidateFailed;
 import com.nckueat.foodsmap.exception.DisplayNameTooLong;
 import com.nckueat.foodsmap.exception.DisplayNameTooShort;
@@ -29,7 +29,7 @@ import com.nckueat.foodsmap.exception.WrongValidateCode;
 import com.nckueat.foodsmap.model.dto.Jwt;
 import com.nckueat.foodsmap.model.dto.request.UserCreate;
 import com.nckueat.foodsmap.model.entity.User;
-import com.nckueat.foodsmap.repository.UserRepository;
+import com.nckueat.foodsmap.repository.postgresql.UserRepository;
 import com.nckueat.foodsmap.types.LoginMethod;
 
 @Service
@@ -93,7 +93,8 @@ public class AuthorizationService {
         return sendValidateEmail(email, cfResponse, true);
     }
 
-    public String sendValidateEmail(@NonNull String email, @NonNull String cfResponse, boolean checkExist)
+    public String sendValidateEmail(@NonNull String email, @NonNull String cfResponse,
+            boolean checkExist)
             throws WrongEmailFormat, UserAlreadyExist, CFValidateFailed, TooFrequentResends {
         EmailValidator emailValidator = EmailValidator.getInstance();
         if (!emailValidator.isValid(email)) {
@@ -114,8 +115,9 @@ public class AuthorizationService {
         emailValidation.preCheck(email, code, identifyCode);
     }
 
-    public Jwt register(@NonNull UserCreate userCreate) throws UserAlreadyExist, UsernameIllegal,
-            WrongValidateCode, WrongEmailFormat, EmailValidateTooManyRetry, DisplayNameTooLong, DisplayNameTooShort {
+    public Jwt register(@NonNull UserCreate userCreate)
+            throws UserAlreadyExist, UsernameIllegal, WrongValidateCode, WrongEmailFormat,
+            EmailValidateTooManyRetry, DisplayNameTooLong, DisplayNameTooShort {
         if (userCreate.getDisplayName().length() < 1) {
             throw new DisplayNameTooShort();
         }
@@ -148,7 +150,7 @@ public class AuthorizationService {
                     .save(User.fromUserCreate(snowflakeIdGenerator.nextId(), userCreate));
             String token = jwtUtil.generateToken(user.getId(), userCreate.isNoExpiration());
             return Jwt.builder().access_token(token).build();
-        } catch (DuplicateKeyException e) {
+        } catch (DataIntegrityViolationException e) {
             throw new UserAlreadyExist(userCreate.getUsername());
         }
     }

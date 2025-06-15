@@ -1,16 +1,22 @@
 package com.nckueat.foodsmap.model.entity;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@Document(collection = "avatars")
+@Entity
+@Table(name = "avatars")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Avatar {
     @Id
-    private Long id;
+    private Long userId;
 
     private String contentType;
     private byte[] data;

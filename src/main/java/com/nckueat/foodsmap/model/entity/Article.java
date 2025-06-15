@@ -1,14 +1,31 @@
 package com.nckueat.foodsmap.model.entity;
 
 import lombok.NonNull;
-import org.springframework.data.annotation.Id;
+import java.util.HashSet;
+import java.util.Set;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import com.nckueat.foodsmap.Utils.TagsSpliter;
 import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
+import com.nckueat.foodsmap.model.dto.request.ArticleUpdate;
 import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@Entity
+@Table(name = "articles")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Article {
     @Id
     private Long id;
@@ -20,36 +37,57 @@ public class Article {
     private String context;
 
     @NonNull
-    private Long like;
+    private Long likes;
+
+    // @NonNull
+    // @DBRef
+    // @Builder.Default
+    // private User[] likeUsers = new User[0];
 
     @NonNull
     private Long date;
 
     @NonNull
-    private String[] tags;
+    private Set<String> tags;
 
     @NonNull
-    private Long authorID;
-
-    @NonNull
-    @Builder.Default
-    private String[] mediaURL = new String[0];
+    private Long authorId;
 
     @NonNull
     @Builder.Default
-    private String googleMapURL = "";
+    @ElementCollection
+    @CollectionTable(name = "article_media_urls", joinColumns = @JoinColumn(name = "article_id"))
+    @Column(name = "media_url", columnDefinition = "TEXT")
+    @OrderColumn(name = "index")
+    private String[] mediaUrl = new String[0];
 
-    public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate, 
-                                            String[] tags) {
+    @NonNull
+    @Builder.Default
+    private String googleMapUrl = "";
+
+    public static Article fromArticleCreate(Long id, Long authorId, ArticleCreate articleCreate) {
+        Set<String> tagsSet = new HashSet<String>(TagsSpliter.spilt(articleCreate.getContext()));
+
         return Article.builder().id(id).title(articleCreate.getTitle())
-                .context(articleCreate.getContext()).like(0L).date(System.currentTimeMillis()).tags(tags)
-                .authorID(authorId).mediaURL(articleCreate.getMediaURL()).build();
+                .context(articleCreate.getContext()).likes(0L).date(System.currentTimeMillis())
+                .tags(tagsSet).authorId(authorId).mediaUrl(articleCreate.getMediaUrl()).build();
     }
 
-    public static ArticleRead toArticleRead(Article article) {
-        return ArticleRead.builder().id(article.getId()).title(article.getTitle())
-                .context(article.getContext()).like(article.getLike()).date(System.currentTimeMillis()).tags(article.getTags())
-                .authorID(article.getAuthorID()).mediaURL(article.getMediaURL()).googleMapURL(article.getGoogleMapURL()).build();
+    public ArticleRead toArticleRead() {
+        return ArticleRead.builder().id(id.toString()).title(title).context(context).likes(likes)
+                .date(date).tags(tags.toArray(new String[0])).authorID(authorId).mediaURL(mediaUrl)
+                .googleMapURL(googleMapUrl).build();
+    }
+
+    public void update(ArticleUpdate data) {
+        data.getTitle().ifPresent(this::setTitle);
+        data.getContext().ifPresent(v -> {
+            this.setContext(v);
+
+            this.tags = new HashSet<String>(TagsSpliter.spilt(v));
+        });
+        data.getMediaURL().ifPresent(this::setMediaUrl);
+        data.getGoogleMapUrl().ifPresent(this::setGoogleMapUrl);
     }
 }
 

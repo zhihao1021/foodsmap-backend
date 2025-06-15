@@ -10,8 +10,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import com.nckueat.foodsmap.annotation.CurrentUserId;
-import com.nckueat.foodsmap.component.Jwt.JwtAuthenticationToken;
-import com.nckueat.foodsmap.component.Jwt.JwtUtil;
+import com.nckueat.foodsmap.component.jwt.JwtAuthenticationToken;
+import com.nckueat.foodsmap.component.jwt.JwtUtil;
 import com.nckueat.foodsmap.exception.Unauthorized;
 
 public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {

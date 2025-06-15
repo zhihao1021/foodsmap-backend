@@ -1,48 +1,59 @@
 package com.nckueat.foodsmap.model.entity;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.nckueat.foodsmap.model.dto.request.UserCreate;
 import com.nckueat.foodsmap.model.dto.vo.GlobalUserView;
 import com.nckueat.foodsmap.model.dto.vo.UserRead;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Data
 @Builder
-@Document(collection = "users")
+@Entity
+@Table(name = "users")
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
+    @Column(unique = true, nullable = false)
     private Long id;
 
     @NonNull
-    @Indexed(unique = true)
+    @Size(min = 5, max = 30)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @NonNull
-    @Indexed(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Indexed(unique = true)
+    @Column(unique = true)
     private String googleId;
 
     @NonNull
+    @Size(min = 1, max = 64)
+    @Column(nullable = false)
     private String displayName;
 
     @NonNull
+    @Column(nullable = false)
     private String hashedPassword;
 
     @Builder.Default
     private String totpSecret = null;
 
+    // @NonNull
     // @Builder.Default
-    // private String avatarContentType = null;
-
-    // @Builder.Default
-    // private Binary avatar = null;
+    // @ElementCollection
+    // private Article[] likeArticles = new Article[0];
 
     public static User fromUserCreate(Long userId, UserCreate userCreate) {
         return User.builder().id(userId).username(userCreate.getUsername())

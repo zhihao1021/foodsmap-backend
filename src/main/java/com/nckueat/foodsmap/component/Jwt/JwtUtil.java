@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.Jwt;
+package com.nckueat.foodsmap.component.jwt;
 
 import java.security.Key;
 import java.util.Calendar;
@@ -8,8 +8,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Component;
 
 import com.nckueat.foodsmap.properties.JWTProperties;
-
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 
@@ -51,7 +53,8 @@ public class JwtUtil {
             } catch (NumberFormatException e) {
                 return null;
             }
-        } catch (SignatureException e) {
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException
+                | SignatureException | IllegalArgumentException e) {
             return null;
         }
     }

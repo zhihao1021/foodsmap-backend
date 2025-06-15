@@ -12,25 +12,33 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.nckueat.foodsmap.component.Jwt.JwtRequestFilter;
+import com.nckueat.foodsmap.component.jwt.JwtRequestFilter;
+import com.nckueat.foodsmap.exceptionHandler.FilterExceptionHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
+    private final FileSizeFilter fileSizeFilter;
+    private final FilterExceptionHandler filterExceptionHandler;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, FileSizeFilter fileSizeFilter,
+            FilterExceptionHandler filterExceptionHandler) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.fileSizeFilter = fileSizeFilter;
+        this.filterExceptionHandler = filterExceptionHandler;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/avatar/*").permitAll()
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/avatar/**")
+                        .permitAll().anyRequest().authenticated())
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(filterExceptionHandler, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtRequestFilter, FilterExceptionHandler.class)
+                .addFilterAfter(fileSizeFilter,  JwtRequestFilter.class)
                 .formLogin(AbstractHttpConfigurer::disable);
 
         return http.build();

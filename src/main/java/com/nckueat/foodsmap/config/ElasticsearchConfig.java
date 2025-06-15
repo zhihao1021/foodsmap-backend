@@ -27,7 +27,7 @@ import java.security.cert.CertificateFactory;
 
 @Configuration
 @EnableConfigurationProperties(ElasticsearchProperties.class)
-public class MyElasticsearchConfig extends ElasticsearchConfiguration {
+public class ElasticsearchConfig extends ElasticsearchConfiguration {
     private final String[] uris;
     private final int connectTimeout;
     private final int socketTimeout;
@@ -40,7 +40,7 @@ public class MyElasticsearchConfig extends ElasticsearchConfiguration {
     @Autowired
     ResourceLoader resourceLoader;
 
-    public MyElasticsearchConfig(ElasticsearchProperties elasticsearchProperties) {
+    public ElasticsearchConfig(ElasticsearchProperties elasticsearchProperties) {
         super();
         this.uris = elasticsearchProperties.getUris();
         this.connectTimeout = elasticsearchProperties.getConnectTimeout();

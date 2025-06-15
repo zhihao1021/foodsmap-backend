@@ -13,5 +13,5 @@ public class ArticleCreate {
     private final String context;
 
     @NonNull
-    private final String[] mediaURL;
+    private final String[] mediaUrl;
 }

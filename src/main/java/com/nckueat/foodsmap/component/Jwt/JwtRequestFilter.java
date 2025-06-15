@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.Jwt;
+package com.nckueat.foodsmap.component.jwt;
 
 import java.io.IOException;
 import org.springframework.lang.NonNull;
@@ -24,32 +24,22 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
+        final String cookies = request.getHeader("Cookie");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        String token = null;
+        if (authHeader != null && authHeader.toLowerCase().startsWith("bearer ")) {
+            token = authHeader.substring(7);
+        } else if (cookies != null && cookies.contains("access_token=")) {
+            token = cookies.split("access_token=")[1].split(";")[0];
         }
 
-        final String token = authHeader.substring(7);
-        if (!token.isEmpty() && jwtUtil.validateToken(token)) {
+        // final String token = authHeader.substring(7);
+        if (token != null && jwtUtil.validateToken(token)) {
             final Long userId = jwtUtil.extractUserId(token);
 
             Authentication authenticationToken = new JwtAuthenticationToken(userId, token, null);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
-        // else {
-        //     final String cookies = request.getHeader("Cookie");
-        //     if (cookies != null && cookies.contains("access_token=")) {
-        //         // final String jwtCookie = 
-        //         final String jwtCookie = cookies.split("access_token=")[1].split(";")[0];
-        //         if (!jwtCookie.isEmpty() && jwtUtil.validateToken(jwtCookie)) {
-        //             final Long userId = jwtUtil.extractUserId(jwtCookie);
-
-        //             Authentication authenticationToken = new JwtAuthenticationToken(userId, jwtCookie, null);
-        //             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        //         }
-        //     }
-        // }
 
         filterChain.doFilter(request, response);
     }

@@ -5,8 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import com.nckueat.foodsmap.component.Jwt.JwtUtil;
+import com.nckueat.foodsmap.component.jwt.JwtUtil;
 import com.nckueat.foodsmap.resolver.CurrentUserArgumentResolver;
 import com.nckueat.foodsmap.resolver.CurrentUserIdArgumentResolver;
 import com.nckueat.foodsmap.service.UserService;

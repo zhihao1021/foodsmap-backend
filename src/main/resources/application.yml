@@ -1,12 +1,29 @@
 spring:
   application:
     name: foodsmap
-  data:
-    mongodb:
-      uri: ${DB_URI:mongodb://foodsmap:foodsmap@127.0.0.1:27017/foodsmap?authSource=admin}
-      ssl:
-        enabled: ${DB_SSL:false}
-        bundle: foodsmap-mongodb
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  jpa:
+    hibernate.ddl-auto: update
+    show-sql: true
+    properties.hibernate.format_sql: true
+  datasource:
+    url: ${DB_URI:jdbc:postgresql://localhost:5432/foodsmap}
+    username: ${DB_USERNAME:foodsmap}
+    password: ${DB_PASSWORD:foodsmap}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      ssl: ${DB_SSL:false}
+      sslmode: ${DB_SSL_MODE:verify-ca}
+      ssl-root-cert: ${DB_SSL_ROOT_CERT:null}
+      connection-timeout: 10000
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      auto-commit: true
   security:
     oauth2:
       client:
@@ -17,12 +34,6 @@ spring:
             scope:
               - email
               - profile
-  ssl:
-    bundle:
-      pem:
-        foodsmap-mongodb:
-          truststore:
-            certificate: ${DB_CA_FILE:null}
   mail:
     host: ${SMTP_HOST:smtp.example.com}
     port: ${SMTP_PORT:587}
@@ -52,8 +63,10 @@ elasticsearch:
     - ${ES_HOST:localhost:9200}
   auth:
     # username: ${ES_USERNAME:elastic}
-    # password: ${ES_USERNAME:pass}
+    # password: ${ES_PASSWORD:pass}
     api-key: ${ES_API_KEY:null}
   ssl:
     enabled: ${ES_USE_SSL:false}
     certificate: ${ES_CA_FILE:null}
+file-size-limit:
+  avatar: 5MB

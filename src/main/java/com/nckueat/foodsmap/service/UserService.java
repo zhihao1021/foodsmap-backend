@@ -1,18 +1,10 @@
 package com.nckueat.foodsmap.service;
 
-import java.util.List;
-import java.util.ArrayList;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import com.nckueat.foodsmap.Utils.PasswordChecker;
-import com.nckueat.foodsmap.component.EmailValidation.EmailValidation;
+import com.nckueat.foodsmap.component.emailValidation.EmailValidation;
 import com.nckueat.foodsmap.exception.AvatarNotFound;
 import com.nckueat.foodsmap.exception.DisplayNameTooLong;
 import com.nckueat.foodsmap.exception.DisplayNameTooShort;
@@ -25,10 +17,8 @@ import com.nckueat.foodsmap.exception.WrongValidateCode;
 import com.nckueat.foodsmap.model.dto.request.UserUpdate;
 import com.nckueat.foodsmap.model.entity.Avatar;
 import com.nckueat.foodsmap.model.entity.User;
-import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
-import com.nckueat.foodsmap.model.entity.Article;
-import com.nckueat.foodsmap.repository.AvatarRepository;
-import com.nckueat.foodsmap.repository.UserRepository;
+import com.nckueat.foodsmap.repository.postgresql.AvatarRepository;
+import com.nckueat.foodsmap.repository.postgresql.UserRepository;
 
 @Service
 public class UserService {
@@ -38,11 +28,15 @@ public class UserService {
     private AvatarRepository avatarRepository;
     @Autowired
     private EmailValidation emailValidation;
-    @Autowired
-    private MongoTemplate mongoTemplate;
 
     public User getUserById(@NonNull Long id) throws UserNotFound {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFound(id.toString()));
+        return user;
+    }
+
+    public User getUserByUsername(@NonNull String username) throws UserNotFound {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFound(username));
         return user;
     }
 
@@ -83,39 +77,29 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Avatar getAvatar(@NonNull Long userId) throws AvatarNotFound {
+    public Avatar getAvatarById(@NonNull Long userId) throws AvatarNotFound {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFound(userId.toString());
+        }
+
+        return avatarRepository.findById(userId).orElseThrow(AvatarNotFound::new);
+    }
+
+    public Avatar getAvatarByUsername(@NonNull String username) throws AvatarNotFound {
+        Long userId = userRepository.findIdByUsername(username)
+                .orElseThrow(() -> new UserNotFound(username));
+
         return avatarRepository.findById(userId).orElseThrow(AvatarNotFound::new);
     }
 
     public void updateAvatar(@NonNull User user, String contentType, @NonNull byte[] data)
             throws UpdateAvatarFailed {
 
-        Query query = new Query(Criteria.where("_id").is(user.getId()));
-        Update update = new Update().set("contentType", contentType).set("data", data);
-
-        mongoTemplate.upsert(query, update, Avatar.class);
+        Avatar avatar = Avatar.builder().userId(user.getId()).contentType(contentType).data(data).build();
+        avatarRepository.save(avatar);
     }
 
     public void deleteAvatar(@NonNull User user) {
         avatarRepository.deleteById(user.getId());
     }
-
-    public List<ArticleRead> findArticleById(@NonNull Long userID) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("authorID").is(userID))
-                .with(Sort.by(Sort.Direction.DESC, "like"));
-        List<Article> articleResults = mongoTemplate.find(query, Article.class);
-        if (articleResults.isEmpty()) {
-            System.out.println("No articles found for user ID: " + userID);
-            return List.of();
-        }
-        List<ArticleRead> results = new ArrayList<>();
-        for (Article article : articleResults) {
-            System.out.println("Found article: " + article.getTitle() + " by user ID: " + userID);
-            results.add(Article.toArticleRead(article));
-        }
-
-        return results;
-    }
-
 }

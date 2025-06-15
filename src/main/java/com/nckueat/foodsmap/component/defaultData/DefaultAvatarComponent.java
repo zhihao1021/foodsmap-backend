@@ -1,18 +1,18 @@
-package com.nckueat.foodsmap.service;
+package com.nckueat.foodsmap.component.defaultData;
 
 import java.io.IOException;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-@Service
-public class DefaultAvatar {
+@Component
+public class DefaultAvatarComponent {
     private final byte[] defaultAvatar;
 
-    public DefaultAvatar() throws IOException {
+    public DefaultAvatarComponent() throws IOException {
         ClassPathResource resource = new ClassPathResource("static/default_avatar.png");
         this.defaultAvatar = StreamUtils.copyToByteArray(resource.getInputStream());
     }

@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.Jwt;
+package com.nckueat.foodsmap.component.jwt;
 
 import java.util.Collection;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.SnowflakeId;
+package com.nckueat.foodsmap.component.snowflakeId;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.EmailValidation;
+package com.nckueat.foodsmap.component.emailValidation;
 
 import java.util.HashMap;
 import java.util.Timer;

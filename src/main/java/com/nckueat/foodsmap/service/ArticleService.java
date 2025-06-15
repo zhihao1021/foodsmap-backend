@@ -1,32 +1,23 @@
 package com.nckueat.foodsmap.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-
-import org.bson.Document;
-
-import com.nckueat.foodsmap.component.SnowflakeId.SnowflakeIdGenerator;
+import org.yaml.snakeyaml.util.Tuple;
+import com.nckueat.foodsmap.component.nextId.NextIdTokenConverter;
+import com.nckueat.foodsmap.component.snowflakeId.SnowflakeIdGenerator;
 import com.nckueat.foodsmap.exception.ArticleNotFound;
+import com.nckueat.foodsmap.exception.UserNotFound;
 import com.nckueat.foodsmap.model.entity.Article;
+import com.nckueat.foodsmap.model.entity.ArticleES;
 import com.nckueat.foodsmap.model.entity.User;
-import com.nckueat.foodsmap.repository.ArticlesRepository;
+import com.nckueat.foodsmap.repository.elasticsearch.ArticleESRepository;
+import com.nckueat.foodsmap.repository.postgresql.ArticleRepository;
+import com.nckueat.foodsmap.repository.postgresql.UserRepository;
 import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
 import com.nckueat.foodsmap.model.dto.request.ArticleUpdate;
-import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
-
-import java.util.ArrayList;
+import com.nckueat.foodsmap.model.elasticesarch.SearchAfterPage;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 @Service
 public class ArticleService {
@@ -34,101 +25,76 @@ public class ArticleService {
     @Autowired
     private SnowflakeIdGenerator snowflakeIdGenerator;
     @Autowired
-    private ArticlesRepository articlesRepository;
+    private UserRepository userRepository;
     @Autowired
-    private MongoTemplate mongoTemplate;
+    private ArticleRepository articleRepository;
+    @Autowired
+    private ArticleESRepository articleESRepository;
+    @Autowired
+    private NextIdTokenConverter nextIdTokenConverter;
 
-    public ArticleRead ArticlesCreate(@NonNull ArticleCreate articlesCreate, User user) {
+    public Article createArticle(User user, @NonNull ArticleCreate articlesCreate) {
         Article article = Article.fromArticleCreate(snowflakeIdGenerator.nextId(), user.getId(),
-                articlesCreate, spiltTags(articlesCreate.getContext()));
-        article = articlesRepository.save(article);
-        ArticleRead articleRead = Article.toArticleRead(article);
-        return articleRead;
+                articlesCreate);
+
+        article = articleRepository.save(article);
+        articleESRepository.save(ArticleES.fromArticle(article));
+
+        return article;
     }
 
-    public ArticleRead ArticlesUpdate(@NonNull ArticleUpdate data, @PathVariable Long articleId) {
-        Article article =
-                articlesRepository.findById(articleId).orElseThrow(() -> new ArticleNotFound());
-
-        data.getTitle().ifPresent(article::setTitle);
-        data.getContext().ifPresent(article::setContext);
-        data.getLike().ifPresent(article::setLike);
-        data.getMediaURL().ifPresent(article::setMediaURL);
-
-        String[] tags = spiltTags(data.getContext().orElse(""));
-        if (tags.length > 0) {
-            article.setTags(tags);
-        } else {
-            article.setTags(new String[0]);
-        }
-
-        if(data.getTitle().isPresent() || data.getContext().isPresent() || tags.length > 0 || data.getMediaURL().isPresent()){
-            article.setDate(System.currentTimeMillis());
-        }
-
-        articlesRepository.save(article);
-        ArticleRead articleRead = Article.toArticleRead(article);
-
-        return articleRead;
+    public Article findArticleById(@NonNull Long articleId) throws ArticleNotFound {
+        return articleRepository.findById(articleId)
+                .orElseThrow(() -> new ArticleNotFound(articleId));
     }
 
-    public List<ArticleRead> ArticleSearchTag(String[] tag) {
-        Query query = new Query();
-        List<Criteria> regexCriterias = new ArrayList<>();
+    public Article updateArticle(@NonNull Long articleId, ArticleUpdate data, @NonNull Long userId)
+            throws ArticleNotFound {
+        Article article = articleRepository.findFirstByIdAndAuthorId(articleId, userId)
+                .orElseThrow(() -> new ArticleNotFound());
 
-        for (String t : tag) {
-            regexCriterias.add(Criteria.where("tags").regex(".*" + Pattern.quote(t) + ".*", "i"));
-        }
+        article.update(data);
+        articleRepository.save(article);
+        articleESRepository.save(ArticleES.fromArticle(article));
 
-        query.addCriteria(new Criteria().orOperator(regexCriterias.toArray(new Criteria[0])))
-                .with(Sort.by(Sort.Direction.DESC, "like"));
-
-        List<Article> articles = mongoTemplate.find(query, Article.class);
-        List<ArticleRead> results = new ArrayList<>();
-
-        for (Article article : articles) {
-            results.add(Article.toArticleRead(article));
-        }
-
-        return results;
+        return article;
     }
 
-    public List<String> findTop20Tags(){
-        List<String> tags = new ArrayList<>();
-
-        Aggregation agg = Aggregation.newAggregation(
-            Aggregation.unwind("tags"),
-            Aggregation.group("tags").count().as("count"),
-            Aggregation.sort(Sort.Direction.DESC, "count"),
-            Aggregation.limit(20)
-        );
-
-        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "article", Document.class);
-
-        for (Document doc : results.getMappedResults()) {
-            String tag = doc.getString("_id");
-            tags.add(tag);
-            System.out.println("Tag: " + tag + ", Count: " + doc.getInteger("count"));
+    public void deleteArticle(@NonNull Long articleId, @NonNull Long userId) {
+        if (!articleRepository.existsByIdAndAuthorId(articleId, userId)) {
+            throw new ArticleNotFound(articleId);
         }
-
-        return tags;
+        articleRepository.deleteById(articleId);
+        articleESRepository.deleteById(articleId);
     }
 
-    public String[] spiltTags(String inputTags) {
-        inputTags = inputTags.replaceAll("#\\s+", "#");
-        List<String> tags = new ArrayList<>();
-
-        Pattern pattern = Pattern.compile("#(\\w+(?:\\+\\w+)*)");
-        Matcher matcher = pattern.matcher(inputTags);
-
-        while (matcher.find()) {
-            tags.add(matcher.group(1));
+    public List<Article> getArticleListByUserId(@NonNull Long userId, int limit, String token) {
+        Long ack = null;
+        if (token != null && !token.isEmpty()) {
+            ack = nextIdTokenConverter.parseNextId(token);
         }
-        return tags.toArray(new String[0]);
+
+        return articleRepository.findByAuthorId(userId, limit, ack);
     }
 
-    public String[] spiltSearchText(String seaechText) {
-        String seaech = seaechText.replaceAll("[\\s,|+_\\-]+", " ");
-        return seaech.split(" ");
+    public List<Article> getArticlesByUsername(@NonNull String username, int limit, String token) {
+        Long userId = userRepository.findIdByUsername(username)
+                .orElseThrow(() -> new UserNotFound(username));
+
+        return this.getArticleListByUserId(userId, limit, token);
+    }
+
+    public Tuple<List<Article>, String> getArticlesByTag(String tag, int limit, String token) {
+        String searchAfterTag = null;
+        if (token != null && !token.isEmpty()) {
+            searchAfterTag = nextIdTokenConverter.parseNextId(token);
+        }
+
+        SearchAfterPage<Long> searchAfterPage =
+                articleESRepository.findIdsByTag(tag, limit, searchAfterTag);
+
+        List<Article> articles = articleRepository.findAllById(searchAfterPage.getContent());
+
+        return new Tuple<List<Article>, String>(articles, searchAfterPage.getSearchAfterTag());
     }
 }

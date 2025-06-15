@@ -1,4 +1,4 @@
-package com.nckueat.foodsmap.component.CloudflareTurnstile;
+package com.nckueat.foodsmap.component.cloudflareTurnstile;
 
 import java.net.URI;
 import java.net.http.HttpClient;

@@ -8,23 +8,23 @@ import lombok.NonNull;
 @Builder
 public class ArticleRead {
     @NonNull
-    private final Long id;
+    private final String id;
 
     @NonNull
     private final String title;
 
     @NonNull
     private final String context;
-    
+
     @NonNull
-    private final Long like;
+    private final Long likes;
 
     @NonNull
     private final Long date;
-    
+
     @NonNull
     private final String[] tags;
-    
+
     @NonNull
     private final Long authorID;
 
