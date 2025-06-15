@@ -10,9 +10,9 @@ spring:
     show-sql: true
     properties.hibernate.format_sql: true
   datasource:
-    url: ${DB_URI:jdbc:postgresql://localhost:5432/foodsmap}
-    username: ${DB_USERNAME:foodsmap}
-    password: ${DB_PASSWORD:foodsmap}
+    url: ${DB_URI:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:null}
     driver-class-name: org.postgresql.Driver
     hikari:
       ssl: ${DB_SSL:false}
@@ -63,7 +63,7 @@ elasticsearch:
     - ${ES_HOST:localhost:9200}
   auth:
     # username: ${ES_USERNAME:elastic}
-    # password: ${ES_PASSWORD:pass}
+    # password: ${ES_PASSWORD:null}
     api-key: ${ES_API_KEY:null}
   ssl:
     enabled: ${ES_USE_SSL:false}
