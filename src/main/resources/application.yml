@@ -70,3 +70,5 @@ elasticsearch:
     certificate: ${ES_CA_FILE:null}
 file-size-limit:
   avatar: 5MB
+media:
+  store-path: ${MEDIA_STORE_PATH:./media}

@@ -1,5 +1,7 @@
 package com.nckueat.foodsmap.model.dto.vo;
 
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -17,20 +19,23 @@ public class ArticleRead {
     private final String context;
 
     @NonNull
-    private final Long likes;
+    private final Long createTime;
 
     @NonNull
-    private final Long date;
+    private final Long editTime;
 
     @NonNull
-    private final String[] tags;
+    private final Set<String> tags;
 
     @NonNull
-    private final Long authorID;
+    private final GlobalUserView author;
 
     @NonNull
-    private final String[] mediaURL;
+    private final List<String> mediaList;
 
     @NonNull
-    private final String googleMapURL;
+    private final String googleMapUrl;
+
+    @NonNull
+    private final Long likesCount;
 }

@@ -18,6 +18,5 @@ public class Avatar {
     @Id
     private Long userId;
 
-    private String contentType;
     private byte[] data;
 }

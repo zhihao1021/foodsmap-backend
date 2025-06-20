@@ -1,7 +1,6 @@
 package com.nckueat.foodsmap.model.dto.request;
 
 import lombok.NonNull;
-
 import lombok.Data;
 
 @Data
@@ -13,5 +12,5 @@ public class ArticleCreate {
     private final String context;
 
     @NonNull
-    private final String[] mediaUrl;
+    private final String googleMapUrl;
 }

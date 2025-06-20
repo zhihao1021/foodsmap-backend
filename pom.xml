@@ -142,6 +142,12 @@
 			<artifactId>webp-imageio</artifactId>
 			<version>0.1.6</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>3.2.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

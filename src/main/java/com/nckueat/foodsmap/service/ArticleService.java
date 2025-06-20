@@ -3,7 +3,9 @@ package com.nckueat.foodsmap.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.util.Tuple;
+import com.nckueat.foodsmap.component.mediaManager.MediaManager;
 import com.nckueat.foodsmap.component.nextId.NextIdTokenConverter;
 import com.nckueat.foodsmap.component.snowflakeId.SnowflakeIdGenerator;
 import com.nckueat.foodsmap.exception.ArticleNotFound;
@@ -32,13 +34,30 @@ public class ArticleService {
     private ArticleESRepository articleESRepository;
     @Autowired
     private NextIdTokenConverter nextIdTokenConverter;
+    @Autowired
+    private MediaManager mediaManager;
 
-    public Article createArticle(User user, @NonNull ArticleCreate articlesCreate) {
-        Article article = Article.fromArticleCreate(snowflakeIdGenerator.nextId(), user.getId(),
-                articlesCreate);
+    public Article createArticle(@NonNull User user, @NonNull ArticleCreate articlesCreate) {
+        Long articleId = snowflakeIdGenerator.nextId();
 
+        Article article = Article.fromArticleCreate(articleId, user, articlesCreate);
         article = articleRepository.save(article);
         articleESRepository.save(ArticleES.fromArticle(article));
+
+        return article;
+    }
+
+    public Article appendArticleMedia(@NonNull Long articleId, @NonNull Long userId,
+            @NonNull List<MultipartFile> mediaList) throws ArticleNotFound {
+        Article article = articleRepository.findFirstByIdAndAuthorId(articleId, userId)
+                .orElseThrow(() -> new ArticleNotFound(articleId));
+
+        mediaList.stream().forEach(media -> {
+            Long mediaId = mediaManager.saveArticleMedia(articleId, media);
+            article.appendMedia(mediaId);
+        });
+
+        articleRepository.save(article);
 
         return article;
     }
@@ -48,7 +67,7 @@ public class ArticleService {
                 .orElseThrow(() -> new ArticleNotFound(articleId));
     }
 
-    public Article updateArticle(@NonNull Long articleId, ArticleUpdate data, @NonNull Long userId)
+    public Article updateArticle(@NonNull Long articleId, @NonNull Long userId, ArticleUpdate data)
             throws ArticleNotFound {
         Article article = articleRepository.findFirstByIdAndAuthorId(articleId, userId)
                 .orElseThrow(() -> new ArticleNotFound());

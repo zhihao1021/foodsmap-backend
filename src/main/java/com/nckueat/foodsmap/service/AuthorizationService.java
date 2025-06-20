@@ -146,8 +146,7 @@ public class AuthorizationService {
                 userCreate.getIdentifyCode());
 
         try {
-            User user = userRepository
-                    .save(User.fromUserCreate(snowflakeIdGenerator.nextId(), userCreate));
+            User user = userRepository.save(User.fromUserCreate(snowflakeIdGenerator.nextId(), userCreate));
             String token = jwtUtil.generateToken(user.getId(), userCreate.isNoExpiration());
             return Jwt.builder().access_token(token).build();
         } catch (DataIntegrityViolationException e) {

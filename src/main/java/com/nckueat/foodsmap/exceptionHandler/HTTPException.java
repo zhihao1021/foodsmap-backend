@@ -12,6 +12,12 @@ public class HTTPException extends RuntimeException {
         this.detail = detail;
     }
 
+    public HTTPException(int status, String detail) {
+        super(detail);
+        this.status = HttpStatus.resolve(status);
+        this.detail = detail;
+    }
+
     public CustomErrorResponse toErrorResponse() {
         return new CustomErrorResponse(status, detail);
     }

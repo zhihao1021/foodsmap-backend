@@ -1,8 +1,18 @@
 package com.nckueat.foodsmap.service;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import com.luciad.imageio.webp.WebPWriteParam;
 import com.nckueat.foodsmap.Utils.PasswordChecker;
 import com.nckueat.foodsmap.component.emailValidation.EmailValidation;
 import com.nckueat.foodsmap.exception.AvatarNotFound;
@@ -92,11 +102,36 @@ public class UserService {
         return avatarRepository.findById(userId).orElseThrow(AvatarNotFound::new);
     }
 
-    public void updateAvatar(@NonNull User user, String contentType, @NonNull byte[] data)
+    public void updateAvatar(@NonNull User user, @NonNull MultipartFile file)
             throws UpdateAvatarFailed {
+        try {
+            BufferedImage image = ImageIO.read(file.getInputStream());
+            if (image == null) {
+                throw new UpdateAvatarFailed();
+            }
 
-        Avatar avatar = Avatar.builder().userId(user.getId()).contentType(contentType).data(data).build();
-        avatarRepository.save(avatar);
+            // Convert the image to WebP format
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(outputStream);
+            ImageWriter writer = ImageIO.getImageWritersByMIMEType("image/webp").next();
+            writer.setOutput(imageOutputStream);
+
+            WebPWriteParam writeParam = new WebPWriteParam(writer.getLocale());
+            writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            writeParam.setCompressionType(
+                    writeParam.getCompressionTypes()[WebPWriteParam.LOSSY_COMPRESSION]);
+            writeParam.setCompressionQuality(0.6f);
+
+            writer.write(null, new IIOImage(image, null, null), writeParam);
+            imageOutputStream.close();
+
+            Avatar avatar =
+                    Avatar.builder().userId(user.getId()).data(outputStream.toByteArray()).build();
+            avatarRepository.save(avatar);
+        } catch (IOException e) {
+            throw new UpdateAvatarFailed();
+        }
+
     }
 
     public void deleteAvatar(@NonNull User user) {

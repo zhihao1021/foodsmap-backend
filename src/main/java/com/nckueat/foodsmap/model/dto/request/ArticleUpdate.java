@@ -7,6 +7,5 @@ import lombok.Data;
 public class ArticleUpdate {
     private final Optional<String> title;
     private final Optional<String> context;
-    private final Optional<String[]> mediaURL;
     private final Optional<String> googleMapUrl;
 }

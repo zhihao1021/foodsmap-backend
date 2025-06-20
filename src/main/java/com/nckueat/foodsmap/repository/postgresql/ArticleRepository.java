@@ -31,7 +31,7 @@ class ArticleFindByAuthorIdImpl implements ArticleFindByAuthorId {
 
     @Override
     public List<Article> findByAuthorId(Long authorId, int limit, Long ack) {
-        String query = "SELECT a FROM Article a WHERE a.authorId = :authorId";
+        String query = "SELECT a FROM Article a WHERE a.author.id = :authorId";
         if (ack != null) {
             query += " AND a.id < :ack";
         }

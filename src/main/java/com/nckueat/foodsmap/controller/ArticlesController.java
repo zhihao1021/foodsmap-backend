@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.util.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,7 +55,17 @@ public class ArticlesController {
             @NonNull @PathVariable Long articleId, @CurrentUserId Long userId) {
         URI location = URI.create(String.format("/article/by-id/%s", articleId));
         return ResponseEntity.created(location)
-                .body(articlesService.updateArticle(articleId, data, userId).toArticleRead());
+                .body(articlesService.updateArticle(articleId, userId, data).toArticleRead());
+    }
+
+    @PutMapping("by-id/{articleId}/files")
+    public ResponseEntity<ArticleRead> appendArticleMedias(@NonNull @PathVariable Long articleId,
+            @CurrentUserId Long userId,
+            @RequestParam(name = "files") List<MultipartFile> mediaList) {
+        URI location = URI.create(String.format("/article/by-id/%s", articleId));
+
+        return ResponseEntity.created(location).body(
+                articlesService.appendArticleMedia(articleId, userId, mediaList).toArticleRead());
     }
 
     @DeleteMapping("by-id/{articleId}")
