@@ -27,6 +27,7 @@ import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
 import com.nckueat.foodsmap.model.dto.request.ArticleUpdate;
 import com.nckueat.foodsmap.model.dto.response.ListResponse;
 import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
+import com.nckueat.foodsmap.model.dto.vo.UserRead;
 
 @RestController
 @RequestMapping("/article")
@@ -90,6 +91,39 @@ public class ArticlesController {
 
         return ResponseEntity.ok(new ListResponse<>(
                 articles.stream().map(Article::toArticleRead).toList(), newToken));
+    }
+
+    @GetMapping("by-context/{context}")
+    public ResponseEntity<ListResponse<ArticleRead>> getArticlesByContext(
+            @NonNull @PathVariable String context, @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String token) {
+
+        Tuple<List<Article>, String> resultPair =
+                articlesService.getArticlesByContext(context, limit, token);
+        List<Article> articles = resultPair._1();
+        String searchAfterTag = resultPair._2();
+
+        String newToken =
+                articles.size() < limit ? null : nextIdTokenConverter.getNextToken(searchAfterTag);
+
+        return ResponseEntity.ok(new ListResponse<>(
+                articles.stream().map(Article::toArticleRead).toList(), newToken));
+    }
+
+    @GetMapping("by-author/{displayName}")
+    public ResponseEntity<ListResponse<UserRead>> getArticlesByAuthor(
+            @NonNull @PathVariable String displayName, @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String token) {
+        List<User> resultPair =
+                articlesService.getArticlesByAuthor(displayName, limit, token);
+
+        if( resultPair.isEmpty() ) {
+            return ResponseEntity.ok(new ListResponse<>(List.of(), null));
+        }
+
+        ListResponse<UserRead> response = new ListResponse<>(
+            resultPair.stream().map(User::toUserRead).toList(), null);
+        return ResponseEntity.ok(response);
     }
 
     // @GetMapping("by-tag/{tagName}")
