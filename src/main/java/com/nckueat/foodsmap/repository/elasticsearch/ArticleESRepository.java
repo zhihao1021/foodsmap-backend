@@ -26,6 +26,11 @@ interface ArticleESTagOperation {
     public SearchAfterPage<Long> findIdsByTag(String tag, int limit, String searchAfterTag);
 
     public SearchAfterPage<Long> findIdsByTag(String tag, int limit, List<Object> searchAfterValue);
+    
+    public SearchAfterPage<Long> findIdsByContext(String keyword, int limit, String searchAfterValue);
+
+    public SearchAfterPage<Long> findIdsByContext(String keyword, int limit, List<Object> searchAfterValue);
+
 
     public List<String> findPopularTags(int limit);
 }
@@ -104,6 +109,55 @@ class ArticleESTagOperationImpl implements ArticleESTagOperation {
 
         return null;
     }
+
+    @Override
+    public SearchAfterPage<Long> findIdsByContext(@NonNull String keyword, int limit,
+        String searchAfterToken) {
+        List<Object> searchAfterValue = null;
+        if (searchAfterToken != null && !searchAfterToken.isEmpty()) {
+                try {
+                        searchAfterValue = objectMapper.readValue(searchAfterToken,
+                        new TypeReference<List<Object>>() {});
+                } catch (JsonProcessingException e) {
+                }
+        }
+
+        return findIdsByContext(keyword, limit, searchAfterValue);
+    }
+
+    @Override
+    public SearchAfterPage<Long> findIdsByContext(@NonNull String keyword, int limit,
+        List<Object> searchAfterValue) {
+
+        Criteria criteria = new Criteria("context").matches(keyword)
+            .or(new Criteria("title").matches(keyword));
+            
+        CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+        NativeQueryBuilder builder = new NativeQueryBuilder()
+                .withQuery(criteriaQuery)
+                .withFields("id")
+                .withSort(Sort.by("id").descending())
+                .withSourceFilter(new FetchSourceFilter(new String[]{"id"}, null))
+                .withPageable(Pageable.ofSize(limit));
+
+        if (searchAfterValue != null && !searchAfterValue.isEmpty()) {
+                builder = builder.withSearchAfter(searchAfterValue);
+        }
+
+        NativeQuery query = builder.build();
+        SearchHits<ArticleES> searchHits = elasticsearchOperations.search(query, ArticleES.class);
+
+        List<Long> ids = searchHits.getSearchHits().stream()
+                .map(hit -> hit.getContent().getId())
+                .toList();
+
+        List<Object> lastSearchAfter = searchHits.getSearchHits().isEmpty() ? null
+                : searchHits.getSearchHits().get(searchHits.getSearchHits().size() - 1).getSortValues();
+
+        return new SearchAfterPage<>(ids, limit, lastSearchAfter);
+    }
+
+
 }
 
 
