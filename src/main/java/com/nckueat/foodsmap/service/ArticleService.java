@@ -49,7 +49,7 @@ public class ArticleService {
 
     public Article appendArticleMedia(@NonNull Long articleId, @NonNull Long userId,
             @NonNull List<MultipartFile> mediaList) throws ArticleNotFound {
-        Article article = articleRepository.findFirstByIdAndAuthorId(articleId, userId)
+        Article article = articleRepository.findByIdAndAuthorId(articleId, userId)
                 .orElseThrow(() -> new ArticleNotFound(articleId));
 
         mediaList.stream().forEach(media -> {
@@ -69,7 +69,7 @@ public class ArticleService {
 
     public Article updateArticle(@NonNull Long articleId, @NonNull Long userId, ArticleUpdate data)
             throws ArticleNotFound {
-        Article article = articleRepository.findFirstByIdAndAuthorId(articleId, userId)
+        Article article = articleRepository.findByIdAndAuthorId(articleId, userId)
                 .orElseThrow(() -> new ArticleNotFound());
 
         article.update(data);
@@ -103,7 +103,8 @@ public class ArticleService {
         return this.getArticleListByUserId(userId, limit, token);
     }
 
-    public Tuple<List<Article>, String> getArticlesByTag(String tag, int limit, String token) {
+    public Tuple<List<Article>, String> getArticlesByTag(@NonNull String tag, int limit,
+            String token) {
         String searchAfterTag = null;
         if (token != null && !token.isEmpty()) {
             searchAfterTag = nextIdTokenConverter.parseNextId(token);
@@ -137,4 +138,22 @@ public class ArticleService {
                 .orElseThrow(() -> new UserNotFound(displayName));
     }
 
+    public void likeArticle(@NonNull Long articleId, @NonNull User user) {
+        Article article =
+                articleRepository.findByIdAndAuthorIdNotInLikeUsers(articleId, user.getId())
+                        .orElseThrow(() -> new ArticleNotFound(articleId));
+
+        System.err.println(article.getId());
+
+        user.like(article);
+        userRepository.save(user);
+    }
+
+    public void dislike(@NonNull Long articleId, @NonNull User user) {
+        Article article = articleRepository.findByIdAndAuthorIdInLikeUsers(articleId, user.getId())
+                .orElseThrow(() -> new ArticleNotFound(articleId));
+
+        user.dislike(article);
+        userRepository.save(user);
+    }
 }
