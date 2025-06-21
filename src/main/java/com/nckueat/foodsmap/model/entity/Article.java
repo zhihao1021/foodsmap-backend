@@ -91,7 +91,8 @@ public class Article {
 
         return Article.builder().id(id).title(articleCreate.getTitle())
                 .context(articleCreate.getContext()).createTime(System.currentTimeMillis())
-                .editTime(System.currentTimeMillis()).tags(tagsSet).author(user).build();
+                .googleMapUrl(articleCreate.getGoogleMapUrl()).editTime(System.currentTimeMillis())
+                .tags(tagsSet).author(user).build();
     }
 
     public ArticleRead toArticleRead() {
