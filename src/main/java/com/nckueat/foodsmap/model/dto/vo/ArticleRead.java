@@ -38,4 +38,6 @@ public class ArticleRead {
 
     @NonNull
     private final Long likesCount;
+
+    private final boolean likedByUser;
 }

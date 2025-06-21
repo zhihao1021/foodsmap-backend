@@ -3,6 +3,7 @@ package com.nckueat.foodsmap.service;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -136,5 +137,9 @@ public class UserService {
 
     public void deleteAvatar(@NonNull User user) {
         avatarRepository.deleteById(user.getId());
+    }
+
+    public List<Long> getLikeArticleIdsById(@NonNull Long userId) throws UserNotFound {
+        return userRepository.findLikedArticleIdsByUserId(userId);
     }
 }

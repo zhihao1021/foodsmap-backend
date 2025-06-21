@@ -118,6 +118,18 @@ public class ArticleService {
         return new Tuple<List<Article>, String>(articles, searchAfterPage.getSearchAfterTag());
     }
 
+    public boolean isUserLikeArticle(@NonNull Long userId, @NonNull Long articleId) {
+        return articleRepository.existsByUserLikeAndArticle(articleId, userId);
+    }
+
+    public List<Long> getUserLikeArticleIds(Long userId, @NonNull List<Article> articles) {
+        if (userId == null || articles.isEmpty()) {
+            return List.of();
+        }
+
+        return articleRepository.findUserLikeArticleIds(userId, articles);
+    }
+
     public void likeArticle(@NonNull Long articleId, @NonNull User user) {
         Article article =
                 articleRepository.findByIdAndAuthorIdNotInLikeUsers(articleId, user.getId())

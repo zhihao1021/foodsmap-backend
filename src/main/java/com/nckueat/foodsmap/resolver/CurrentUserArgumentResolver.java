@@ -10,6 +10,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import com.nckueat.foodsmap.annotation.CurrentUser;
+import com.nckueat.foodsmap.annotation.OptionalCurrentUser;
 import com.nckueat.foodsmap.component.jwt.JwtAuthenticationToken;
 import com.nckueat.foodsmap.component.jwt.JwtUtil;
 import com.nckueat.foodsmap.exception.Unauthorized;
@@ -27,7 +28,8 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(CurrentUser.class)
+        return (parameter.hasParameterAnnotation(CurrentUser.class)
+                || parameter.hasParameterAnnotation(OptionalCurrentUser.class))
                 && (User.class.isAssignableFrom(parameter.getParameterType())
                         || User.class.isAssignableFrom(parameter.getParameterType()));
     }
@@ -39,6 +41,9 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
+            if (parameter.hasParameterAnnotation(OptionalCurrentUser.class)) {
+                return null;
+            }
             throw new Unauthorized();
         }
 
@@ -49,8 +54,13 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
             if (jwtUtil.validateToken(token)) {
                 User user = userService.getUserById(userId);
+
                 return user;
             }
+        }
+
+        if (parameter.hasParameterAnnotation(OptionalCurrentUser.class)) {
+            return null;
         }
 
         throw new Unauthorized();

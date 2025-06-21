@@ -10,6 +10,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import com.nckueat.foodsmap.annotation.CurrentUserId;
+import com.nckueat.foodsmap.annotation.OptionalCurrentUserId;
 import com.nckueat.foodsmap.component.jwt.JwtAuthenticationToken;
 import com.nckueat.foodsmap.component.jwt.JwtUtil;
 import com.nckueat.foodsmap.exception.Unauthorized;
@@ -23,7 +24,8 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(CurrentUserId.class)
+        return (parameter.hasParameterAnnotation(CurrentUserId.class)
+                || parameter.hasParameterAnnotation(OptionalCurrentUserId.class))
                 && Long.class.isAssignableFrom(parameter.getParameterType());
     }
 
@@ -34,6 +36,10 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
+            if (parameter.hasParameterAnnotation(OptionalCurrentUserId.class)) {
+                return null;
+            }
+
             throw new Unauthorized();
         }
 
@@ -47,6 +53,9 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
             }
         }
 
+        if (parameter.hasParameterAnnotation(OptionalCurrentUserId.class)) {
+            return null;
+        }
         throw new Unauthorized();
     }
 }

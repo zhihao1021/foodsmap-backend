@@ -1,5 +1,6 @@
 package com.nckueat.foodsmap.repository.postgresql;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u.id FROM User u WHERE u.username = :username")
     Optional<Long> findIdByUsername(@Param("username") String username);
+
+    @Query("SELECT a.id FROM User u JOIN u.likedArticles a WHERE u.id = :userId")
+    List<Long> findLikedArticleIdsByUserId(@Param("userId") Long userId);
 }
