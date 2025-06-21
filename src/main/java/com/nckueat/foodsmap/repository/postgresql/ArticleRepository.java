@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import com.nckueat.foodsmap.model.entity.Article;
 import jakarta.persistence.EntityManager;
 
@@ -52,6 +53,12 @@ class ArticleFindByAuthorIdImpl implements ArticleFindByAuthorId {
 public interface ArticleRepository extends JpaRepository<Article, Long>, ArticleFindByAuthorId {
     boolean existsByIdAndAuthorId(Long id, Long authorId);
 
-    Optional<Article> findFirstByIdAndAuthorId(Long id, Long authorId);
+    Optional<Article> findByIdAndAuthorId(Long id, Long authorId);
+
+    @Query("SELECT a FROM Article a WHERE a.id = :id AND EXISTS (SELECT 1 FROM User u JOIN u.likedArticles la WHERE u.id = :authorId AND la = a)")
+    Optional<Article> findByIdAndAuthorIdInLikeUsers(Long id, Long authorId);
+
+    @Query("SELECT a FROM Article a WHERE a.id = :id AND NOT EXISTS (SELECT 1 FROM User u JOIN u.likedArticles la WHERE u.id = :authorId AND la = a)")
+    Optional<Article> findByIdAndAuthorIdNotInLikeUsers(Long id, Long authorId);
 }
 

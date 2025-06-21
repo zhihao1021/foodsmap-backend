@@ -8,6 +8,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -16,7 +17,8 @@ public class GlobalExceptionHandler {
         HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         if (e instanceof ErrorResponse) {
             statusCode = ((ErrorResponse) e).getStatusCode();
-        } else if (e instanceof HttpMessageNotReadableException) {
+        } else if (e instanceof HttpMessageNotReadableException
+                || e instanceof MethodArgumentTypeMismatchException) {
             statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
         } else if (HttpMediaTypeException.class.isAssignableFrom(e.getClass())) {
             statusCode = HttpStatus.UNSUPPORTED_MEDIA_TYPE;

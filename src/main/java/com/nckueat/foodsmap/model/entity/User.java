@@ -65,14 +65,16 @@ public class User {
     @NonNull
     @Builder.Default
     @Column(nullable = false)
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true,
+            fetch = FetchType.LAZY)
     private List<Article> articles = new ArrayList<>();
 
     @NonNull
     @Builder.Default
     @Column(nullable = false)
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
-    @JoinTable(name = "user_likes", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "article_id"))
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "user_likes", joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "article_id"))
     @OrderColumn(name = "index")
     private List<Article> likedArticles = new ArrayList<>();
 
@@ -97,5 +99,13 @@ public class User {
 
     public boolean checkPassword(String password) {
         return new BCryptPasswordEncoder(10).matches(password, this.hashedPassword);
+    }
+
+    public void like(Article article) {
+        this.likedArticles.add(article);
+    }
+
+    public void dislike(Article article) {
+        this.likedArticles.remove(article);
     }
 }
