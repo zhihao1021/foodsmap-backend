@@ -69,6 +69,22 @@ public class ArticlesController {
                 articlesService.appendArticleMedia(articleId, userId, mediaList).toArticleRead());
     }
 
+    @PutMapping("by-id/{articleId}/like")
+    public ResponseEntity<Void> likeArticle(@NonNull @PathVariable Long articleId,
+            @CurrentUser User user) {
+        articlesService.likeArticle(articleId, user);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("by-id/{articleId}/like")
+    public ResponseEntity<Void> dislikeArticle(@NonNull @PathVariable Long articleId,
+            @CurrentUser User user) {
+        articlesService.dislike(articleId, user);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("by-id/{articleId}")
     public ResponseEntity<Void> deleteArticle(@NonNull @PathVariable Long articleId,
             @CurrentUserId Long userId) {
@@ -178,7 +194,8 @@ public class ArticlesController {
     // throws ArticleNotFound {
 
     // String[] searchContext = articlesService.spiltSearchText(data.getSearchContext());
-    // System.out.println("Searching for articles with tags: " + String.join(", ", searchContext));
+    // System.out.println("Searching for articles with tags: " + String.join(", ",
+    // searchContext));
     // List<ArticleRead> results = articlesService.ArticleSearchTag(searchContext);
     // results.forEach(article -> System.out.println("Found article: " + article.getTitle()));
     // if (results.isEmpty()) {
