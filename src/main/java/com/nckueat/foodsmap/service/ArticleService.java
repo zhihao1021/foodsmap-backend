@@ -118,7 +118,20 @@ public class ArticleService {
         return new Tuple<List<Article>, String>(articles, searchAfterPage.getSearchAfterTag());
     }
 
-    public Tuple<List<Article>, String> getArticlesByContext(String context, int limit, String token) {
+    public boolean isUserLikeArticle(@NonNull Long userId, @NonNull Long articleId) {
+        return articleRepository.existsByUserLikeAndArticle(articleId, userId);
+    }
+
+    public List<Long> getUserLikeArticleIds(Long userId, @NonNull List<Article> articles) {
+        if (userId == null || articles.isEmpty()) {
+            return List.of();
+        }
+
+        return articleRepository.findUserLikeArticleIds(userId, articles);
+    }
+
+    public Tuple<List<Article>, String> getArticlesByContext(String context, int limit,
+            String token) {
         String searchAfterContext = null;
         if (token != null && !token.isEmpty()) {
             searchAfterContext = nextIdTokenConverter.parseNextId(token);
@@ -130,12 +143,6 @@ public class ArticleService {
         List<Article> articles = articleRepository.findAllById(searchAfterPage.getContent());
 
         return new Tuple<>(articles, searchAfterPage.getSearchAfterTag());
-    }
-
-    public List<User> getArticlesByAuthor(String displayName, int limit,
-            String token) {
-        return userRepository.findByDisplayNameContaining(displayName)
-                .orElseThrow(() -> new UserNotFound(displayName));
     }
 
     public void likeArticle(@NonNull Long articleId, @NonNull User user) {

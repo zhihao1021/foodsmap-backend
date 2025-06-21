@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import java.util.function.Function;
 import org.hibernate.annotations.Formula;
 
 import jakarta.persistence.Id;
@@ -98,7 +98,18 @@ public class Article {
         return ArticleRead.builder().id(id.toString()).title(title).context(context)
                 .createTime(createTime).editTime(editTime).tags(tags)
                 .author(author.toGlobalUserView()).mediaList(mediaList).googleMapUrl(googleMapUrl)
-                .likesCount(likesCount).build();
+                .likesCount(likesCount).likedByUser(false).build();
+    }
+
+    public ArticleRead toArticleRead(boolean likedByUser) {
+        return ArticleRead.builder().id(id.toString()).title(title).context(context)
+                .createTime(createTime).editTime(editTime).tags(tags)
+                .author(author.toGlobalUserView()).mediaList(mediaList).googleMapUrl(googleMapUrl)
+                .likesCount(likesCount).likedByUser(likedByUser).build();
+    }
+
+    public static Function<Article, ArticleRead> toArticleReadFunction(List<Long> userLikeIds) {
+        return article -> article.toArticleRead(userLikeIds.contains(article.getId()));
     }
 
     public void update(ArticleUpdate data) {

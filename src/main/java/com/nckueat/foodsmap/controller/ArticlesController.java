@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.nckueat.foodsmap.model.entity.User;
 import com.nckueat.foodsmap.annotation.CurrentUser;
 import com.nckueat.foodsmap.annotation.CurrentUserId;
+import com.nckueat.foodsmap.annotation.OptionalCurrentUserId;
 import com.nckueat.foodsmap.component.nextId.NextIdTokenConverter;
 import com.nckueat.foodsmap.model.entity.Article;
 import com.nckueat.foodsmap.service.ArticleService;
@@ -27,7 +28,6 @@ import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
 import com.nckueat.foodsmap.model.dto.request.ArticleUpdate;
 import com.nckueat.foodsmap.model.dto.response.ListResponse;
 import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
-import com.nckueat.foodsmap.model.dto.vo.UserRead;
 
 @RestController
 @RequestMapping("/article")
@@ -42,31 +42,41 @@ public class ArticlesController {
     public ResponseEntity<ArticleRead> createArticle(@RequestBody ArticleCreate data,
             @CurrentUser User user) {
         Article article = articlesService.createArticle(user, data);
+
         URI location = URI.create(String.format("/article/by-id/%s", article.getId().toString()));
         return ResponseEntity.created(location).body(article.toArticleRead());
     }
 
     @GetMapping("by-id/{articleId}")
-    public ResponseEntity<ArticleRead> getArticle(@NonNull @PathVariable Long articleId) {
-        return ResponseEntity.ok().body(articlesService.findArticleById(articleId).toArticleRead());
+    public ResponseEntity<ArticleRead> getArticle(@NonNull @PathVariable Long articleId,
+            @OptionalCurrentUserId Long searcherId) {
+        Article article = articlesService.findArticleById(articleId);
+        boolean userLike = articlesService.isUserLikeArticle(searcherId, articleId);
+
+        return ResponseEntity.ok().body(article.toArticleRead(userLike));
     }
 
     @PutMapping("by-id/{articleId}")
     public ResponseEntity<ArticleRead> updateArticle(@RequestBody ArticleUpdate data,
             @NonNull @PathVariable Long articleId, @CurrentUserId Long userId) {
+        Article article = articlesService.updateArticle(articleId, userId, data);
+        boolean userLike = articlesService.isUserLikeArticle(userId, articleId);
+
         URI location = URI.create(String.format("/article/by-id/%s", articleId));
-        return ResponseEntity.created(location)
-                .body(articlesService.updateArticle(articleId, userId, data).toArticleRead());
+
+        return ResponseEntity.created(location).body(article.toArticleRead(userLike));
     }
 
     @PutMapping("by-id/{articleId}/files")
     public ResponseEntity<ArticleRead> appendArticleMedias(@NonNull @PathVariable Long articleId,
             @CurrentUserId Long userId,
             @RequestParam(name = "files") List<MultipartFile> mediaList) {
+        Article article = articlesService.appendArticleMedia(articleId, userId, mediaList);
+        boolean userLike = articlesService.isUserLikeArticle(userId, articleId);
+
         URI location = URI.create(String.format("/article/by-id/%s", articleId));
 
-        return ResponseEntity.created(location).body(
-                articlesService.appendArticleMedia(articleId, userId, mediaList).toArticleRead());
+        return ResponseEntity.created(location).body(article.toArticleRead(userLike));
     }
 
     @PutMapping("by-id/{articleId}/like")
@@ -95,7 +105,7 @@ public class ArticlesController {
     @GetMapping("by-tag/{tagName}")
     public ResponseEntity<ListResponse<ArticleRead>> getArticlesByTag(
             @NonNull @PathVariable String tagName, @RequestParam(defaultValue = "100") int limit,
-            @RequestParam(required = false) String token) {
+            @RequestParam(required = false) String token, @OptionalCurrentUserId Long searcherId) {
 
         Tuple<List<Article>, String> resultPair =
                 articlesService.getArticlesByTag(tagName, limit, token);
@@ -105,8 +115,11 @@ public class ArticlesController {
         String newToken =
                 articles.size() < limit ? null : nextIdTokenConverter.getNextToken(searchAfterTag);
 
+        List<Long> userLikeIds = articlesService.getUserLikeArticleIds(searcherId, articles);
+
         return ResponseEntity.ok(new ListResponse<>(
-                articles.stream().map(Article::toArticleRead).toList(), newToken));
+                articles.stream().map(Article.toArticleReadFunction(userLikeIds)).toList(),
+                newToken));
     }
 
     @GetMapping("by-context/{context}")
@@ -125,112 +138,4 @@ public class ArticlesController {
         return ResponseEntity.ok(new ListResponse<>(
                 articles.stream().map(Article::toArticleRead).toList(), newToken));
     }
-
-    @GetMapping("by-author/{displayName}")
-    public ResponseEntity<ListResponse<UserRead>> getArticlesByAuthor(
-            @NonNull @PathVariable String displayName, @RequestParam(defaultValue = "100") int limit,
-            @RequestParam(required = false) String token) {
-        List<User> resultPair =
-                articlesService.getArticlesByAuthor(displayName, limit, token);
-
-        if( resultPair.isEmpty() ) {
-            return ResponseEntity.ok(new ListResponse<>(List.of(), null));
-        }
-
-        ListResponse<UserRead> response = new ListResponse<>(
-            resultPair.stream().map(User::toUserRead).toList(), null);
-        return ResponseEntity.ok(response);
-    }
-
-    // @GetMapping("by-tag/{tagName}")
-    // public ResponseEntity<ListResponse<ArticleRead>> getArticlesByTag() {
-
-    // }
-
-    // @PostMapping("search/text")
-    // public ResponseEntity<List<ArticleRead>> ArticlesSearch(@RequestBody ArticleSearch data)
-    // throws ArticleNotFound {
-
-    // String[] searchContext = articlesService.spiltSearchText(data.getSearchContext());
-    // TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(searchContext); //
-    // 匹配任一詞
-
-    // Query query = TextQuery.queryText(criteria).sortByScore()
-    // .addCriteria(Criteria.where("score").gt(0))
-    // .with(Sort.by(Sort.Direction.DESC, "like"));
-    // List<Article> searchResults = mongoTemplate.find(query, Article.class);
-    // // System.err.println("Search results: " + results);
-
-    // if (searchResults.isEmpty()) {
-    // throw new ArticleNotFound();
-    // }
-
-    // List<ArticleRead> results = new ArrayList<>();
-    // for (Article article : searchResults) {
-    // System.out.println("Found article: " + article.getTitle());
-    // results.add(article.toArticleRead());
-    // }
-
-    // return ResponseEntity.ok(results);
-    // }
-
-    // @PostMapping("search/author")
-    // public ResponseEntity<UserRead> ArticlesAuthor(@RequestBody ArticleSearch data)
-    // throws ArticleNotFound {
-    // String searchContext = data.getSearchContext().replaceAll("[\\s,|+_\\-]+", "");
-
-    // User author = userRepository.findByUsername(searchContext)
-    // .orElseThrow(() -> new UserNotFound("Author not found"));
-
-    // System.out.println(author);
-
-    // UserRead authorRead = author.toUserRead();
-
-    // return ResponseEntity.ok(authorRead);
-    // }
-
-    // @PostMapping("search/tag")
-    // public ResponseEntity<List<ArticleRead>> ArticlesTag(@RequestBody ArticleSearch data)
-    // throws ArticleNotFound {
-
-    // String[] searchContext = articlesService.spiltSearchText(data.getSearchContext());
-    // System.out.println("Searching for articles with tags: " + String.join(", ",
-    // searchContext));
-    // List<ArticleRead> results = articlesService.ArticleSearchTag(searchContext);
-    // results.forEach(article -> System.out.println("Found article: " + article.getTitle()));
-    // if (results.isEmpty()) {
-    // throw new ArticleNotFound();
-    // }
-
-    // System.out.println(results);
-
-    // return ResponseEntity.ok(results);
-    // }
-
-    // @GetMapping("recommend")
-    // public ResponseEntity<List<ArticleRead>> ArticlesRecommend() throws ArticleNotFound {
-
-    // Query query = new Query();
-    // query.with(Sort.by(Sort.Direction.DESC, "like")).limit(10);
-    // List<Article> recommendArticle = mongoTemplate.find(query, Article.class);
-
-    // if (recommendArticle.isEmpty()) {
-    // throw new ArticleNotFound();
-    // }
-
-    // List<ArticleRead> results = new ArrayList<>();
-
-    // for (Article article : recommendArticle) {
-    // results.add(article.toArticleRead());
-    // }
-
-    // return ResponseEntity.ok(results);
-    // }
-
-    // @GetMapping("recommend/tag")
-    // public ResponseEntity<List<String>> TagRecommend() throws ArticleNotFound {
-    // List<String> tags = articlesService.findTop20Tags();
-    // return ResponseEntity.ok(tags);
-    // }
-
 }
