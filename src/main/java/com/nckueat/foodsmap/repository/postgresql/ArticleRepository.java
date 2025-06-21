@@ -26,6 +26,13 @@ interface ArticleFindByAuthorId {
     public List<Article> findByAuthorId(Long authorId, int limit, Long ack);
 }
 
+interface findLatestArticle { 
+    default List<Article> findLatestArticles(int limit) {
+        return findLatestArticles(limit, null);
+    }
+    
+    public List<Article> findLatestArticles(int limit, Long ack);    
+}
 
 interface ArticleFindUserLikeIds {
     public List<Long> findUserLikeArticleIds(Long searcherId, List<Article> articles);
@@ -49,6 +56,29 @@ class ArticleFindByAuthorIdImpl implements ArticleFindByAuthorId {
         typedQuery = typedQuery.setParameter("limit", Math.max(Math.min(limit, 100), 1));
         if (ack != null) {
             typedQuery = typedQuery.setParameter("ack", ack);
+        }
+
+        return typedQuery.getResultList();
+    }
+}
+
+class findLatestArticleImpl implements findLatestArticle {
+    @Autowired
+    private EntityManager entityManager;
+
+    @Override
+    public List<Article> findLatestArticles(int limit, Long ack) {
+        String query = "SELECT a FROM Article a";
+        if (ack != null) {
+            query += " WHERE a.createTime < :ack";
+        }
+        query += " ORDER BY a.createTime DESC";
+
+        var typedQuery = entityManager.createQuery(query, Article.class)
+            .setMaxResults(Math.max(Math.min(limit, 100), 1));
+
+        if (ack != null) {
+            typedQuery.setParameter("ack", ack);
         }
 
         return typedQuery.getResultList();

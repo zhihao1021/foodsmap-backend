@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.nckueat.foodsmap.service.SearchService;
+import com.nckueat.foodsmap.model.entity.Article;
+import com.nckueat.foodsmap.model.dto.vo.ArticleRead;
 
 @RestController
 @RequestMapping("/search")
@@ -21,5 +23,17 @@ public class SearchController {
         List<String> popularTags = searchService.getPopularTags(limit);
 
         return ResponseEntity.ok(popularTags);
+    }
+
+    @GetMapping("latest-articles")
+    public ResponseEntity<List<ArticleRead>> getLatestArticles(
+            @RequestParam(defaultValue = "10000") int limit) {
+        List<Article> latestArticles = searchService.getLatestArticles(limit);
+
+        List<ArticleRead> latestArticleReads = latestArticles.stream()
+                .map(Article::toArticleRead)
+                .toList();
+
+        return ResponseEntity.ok(latestArticleReads);
     }
 }
