@@ -121,4 +121,21 @@ public class ArticlesController {
                 articles.stream().map(Article.toArticleReadFunction(userLikeIds)).toList(),
                 newToken));
     }
+
+    @GetMapping("by-context/{context}")
+    public ResponseEntity<ListResponse<ArticleRead>> getArticlesByContext(
+            @NonNull @PathVariable String context, @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String token) {
+
+        Tuple<List<Article>, String> resultPair =
+                articlesService.getArticlesByContext(context, limit, token);
+        List<Article> articles = resultPair._1();
+        String searchAfterTag = resultPair._2();
+
+        String newToken =
+                articles.size() < limit ? null : nextIdTokenConverter.getNextToken(searchAfterTag);
+
+        return ResponseEntity.ok(new ListResponse<>(
+                articles.stream().map(Article::toArticleRead).toList(), newToken));
+    }
 }

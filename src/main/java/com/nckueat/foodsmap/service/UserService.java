@@ -142,4 +142,9 @@ public class UserService {
     public List<Long> getLikeArticleIdsById(@NonNull Long userId) throws UserNotFound {
         return userRepository.findLikedArticleIdsByUserId(userId);
     }
+
+    public List<User> getArticlesByAuthor(String displayName, int limit, String token) {
+        return userRepository.findByDisplayNameContaining(displayName)
+                .orElseThrow(() -> new UserNotFound(displayName));
+    }
 }

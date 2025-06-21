@@ -130,6 +130,21 @@ public class ArticleService {
         return articleRepository.findUserLikeArticleIds(userId, articles);
     }
 
+    public Tuple<List<Article>, String> getArticlesByContext(String context, int limit,
+            String token) {
+        String searchAfterContext = null;
+        if (token != null && !token.isEmpty()) {
+            searchAfterContext = nextIdTokenConverter.parseNextId(token);
+        }
+
+        SearchAfterPage<Long> searchAfterPage =
+                articleESRepository.findIdsByContext(context, limit, searchAfterContext);
+
+        List<Article> articles = articleRepository.findAllById(searchAfterPage.getContent());
+
+        return new Tuple<>(articles, searchAfterPage.getSearchAfterTag());
+    }
+
     public void likeArticle(@NonNull Long articleId, @NonNull User user) {
         Article article =
                 articleRepository.findByIdAndAuthorIdNotInLikeUsers(articleId, user.getId())
