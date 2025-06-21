@@ -26,13 +26,15 @@ interface ArticleFindByAuthorId {
     public List<Article> findByAuthorId(Long authorId, int limit, Long ack);
 }
 
-interface findLatestArticle { 
+
+interface FindLatestArticle {
     default List<Article> findLatestArticles(int limit) {
         return findLatestArticles(limit, null);
     }
-    
-    public List<Article> findLatestArticles(int limit, Long ack);    
+
+    public List<Article> findLatestArticles(int limit, Long ack);
 }
+
 
 interface ArticleFindUserLikeIds {
     public List<Long> findUserLikeArticleIds(Long searcherId, List<Article> articles);
@@ -62,7 +64,8 @@ class ArticleFindByAuthorIdImpl implements ArticleFindByAuthorId {
     }
 }
 
-class findLatestArticleImpl implements findLatestArticle {
+
+class FindLatestArticleImpl implements FindLatestArticle {
     @Autowired
     private EntityManager entityManager;
 
@@ -75,7 +78,7 @@ class findLatestArticleImpl implements findLatestArticle {
         query += " ORDER BY a.createTime DESC";
 
         var typedQuery = entityManager.createQuery(query, Article.class)
-            .setMaxResults(Math.max(Math.min(limit, 100), 1));
+                .setMaxResults(Math.max(Math.min(limit, 100), 1));
 
         if (ack != null) {
             typedQuery.setParameter("ack", ack);
@@ -100,8 +103,8 @@ class ArticleFindUserLikeIdsImpl implements ArticleFindUserLikeIds {
 }
 
 
-public interface ArticleRepository
-        extends JpaRepository<Article, Long>, ArticleFindByAuthorId, ArticleFindUserLikeIds {
+public interface ArticleRepository extends JpaRepository<Article, Long>, ArticleFindByAuthorId,
+        ArticleFindUserLikeIds, FindLatestArticle {
     boolean existsByIdAndAuthorId(Long id, Long authorId);
 
     Optional<Article> findByIdAndAuthorId(Long id, Long authorId);
