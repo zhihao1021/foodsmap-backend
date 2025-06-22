@@ -138,4 +138,15 @@ public class ArticlesController {
         return ResponseEntity.ok(new ListResponse<>(
                 articles.stream().map(Article::toArticleRead).toList(), newToken));
     }
+
+    @GetMapping("latest")
+    public ResponseEntity<ListResponse<ArticleRead>> getLatestArticles(
+            @RequestParam(defaultValue = "10000") int limit,
+            @OptionalCurrentUserId Long searcherId) {
+        List<Article> articles = articlesService.getLatestArticles(limit);
+        List<Long> userLikeIds = articlesService.getUserLikeArticleIds(searcherId, articles);
+
+        return ResponseEntity.ok(new ListResponse<>(
+                articles.stream().map(Article.toArticleReadFunction(userLikeIds)).toList(), null));
+    }
 }

@@ -143,8 +143,7 @@ public class UserService {
         return userRepository.findLikedArticleIdsByUserId(userId);
     }
 
-    public List<User> getArticlesByAuthor(String displayName, int limit, String token) {
-        return userRepository.findByDisplayNameContaining(displayName)
-                .orElseThrow(() -> new UserNotFound(displayName));
+    public List<User> getArticlesByDisplayName(String displayName, int limit, String token) {
+        return userRepository.findByDisplayNameContaining(displayName);
     }
 }

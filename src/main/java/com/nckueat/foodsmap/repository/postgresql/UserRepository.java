@@ -22,7 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT a.id FROM User u JOIN u.likedArticles a WHERE u.id = :userId")
     List<Long> findLikedArticleIdsByUserId(@Param("userId") Long userId);
 
-    // @Query("SELECT * FROM User u WHERE u.desplayName = :desplayName")
     @Query("SELECT u FROM User u WHERE u.displayName LIKE %:displayName%")
-    Optional<List<User>> findByDisplayNameContaining(@Param("displayName") String displayName);
+    List<User> findByDisplayNameContaining(@Param("displayName") String displayName);
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.nckueat.foodsmap.model.entity.Article;
@@ -116,6 +117,10 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, Article
     Optional<Article> findByIdAndAuthorIdNotInLikeUsers(Long id, Long authorId);
 
     @Query("SELECT EXISTS (SELECT 1 FROM User u JOIN u.likedArticles ul WHERE u.id = :userId AND ul.id = :articleId)")
-    public boolean existsByUserLikeAndArticle(@Param("userId") Long userId,
+    boolean existsByUserLikeAndArticle(@Param("userId") Long userId,
             @Param("articleId") Long articleId);
+
+    @Modifying
+    @Query(value = "DELETE FROM user_likes WHERE article_id = :articleId", nativeQuery = true)
+    void deleteLikesById(@Param("articleId") Long articleId);
 }

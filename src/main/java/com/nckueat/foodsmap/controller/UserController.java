@@ -80,12 +80,12 @@ public class UserController {
         return ResponseEntity.ok(user.toGlobalUserView());
     };
 
-    @GetMapping("by-displayName/{displayName}")
-    public ResponseEntity<ListResponse<UserRead>> getArticlesByAuthor(
+    @GetMapping("by-display-name/{displayName}")
+    public ResponseEntity<ListResponse<UserRead>> getArticlesByDisplayName(
             @NonNull @PathVariable String displayName,
             @RequestParam(defaultValue = "100") int limit,
             @RequestParam(required = false) String token) {
-        List<User> resultPair = userService.getArticlesByAuthor(displayName, limit, token);
+        List<User> resultPair = userService.getArticlesByDisplayName(displayName, limit, token);
 
         if (resultPair.isEmpty()) {
             return ResponseEntity.ok(new ListResponse<>(List.of(), null));

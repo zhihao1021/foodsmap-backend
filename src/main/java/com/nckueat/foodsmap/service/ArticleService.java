@@ -16,6 +16,7 @@ import com.nckueat.foodsmap.model.entity.User;
 import com.nckueat.foodsmap.repository.elasticsearch.ArticleESRepository;
 import com.nckueat.foodsmap.repository.postgresql.ArticleRepository;
 import com.nckueat.foodsmap.repository.postgresql.UserRepository;
+import jakarta.transaction.Transactional;
 import com.nckueat.foodsmap.model.dto.request.ArticleCreate;
 import com.nckueat.foodsmap.model.dto.request.ArticleUpdate;
 import com.nckueat.foodsmap.model.elasticesarch.SearchAfterPage;
@@ -79,10 +80,12 @@ public class ArticleService {
         return article;
     }
 
+    @Transactional
     public void deleteArticle(@NonNull Long articleId, @NonNull Long userId) {
         if (!articleRepository.existsByIdAndAuthorId(articleId, userId)) {
             throw new ArticleNotFound(articleId);
         }
+        articleRepository.deleteLikesById(articleId);
         articleRepository.deleteById(articleId);
         articleESRepository.deleteById(articleId);
     }
@@ -162,5 +165,9 @@ public class ArticleService {
 
         user.dislike(article);
         userRepository.save(user);
+    }
+
+    public List<Article> getLatestArticles(int limit) {
+        return articleRepository.findLatestArticles(limit);
     }
 }
