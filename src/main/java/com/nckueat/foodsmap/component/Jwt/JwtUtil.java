@@ -1,6 +1,7 @@
 package com.nckueat.foodsmap.component.jwt;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -23,7 +24,7 @@ public class JwtUtil {
 
     public JwtUtil(JWTProperties properties) {
         final String secret = properties.getSecret();
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
     }
 
     public String generateToken(Long userId) {

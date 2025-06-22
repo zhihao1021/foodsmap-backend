@@ -33,7 +33,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/avatar/**")
-                        .permitAll().anyRequest().authenticated())
+                        // .permitAll().anyRequest().authenticated())
+                        .permitAll().anyRequest().permitAll())
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(filterExceptionHandler, UsernamePasswordAuthenticationFilter.class)
@@ -50,6 +51,7 @@ public class SecurityConfig {
 
         configuration.addAllowedMethod("*");
         configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("https://www.yssfoodmap.com");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
 
